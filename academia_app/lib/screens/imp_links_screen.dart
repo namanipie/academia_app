@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import for launching URLs
 import '../services/imp_links_data.dart';
@@ -24,7 +25,7 @@ class LinksScreen extends StatelessWidget {
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         // In a production app, you would show a SnackBar or AlertDialog here
         // ignore: avoid_print
-        print('Could not launch $uri'); 
+        if (kDebugMode) debugPrint('Could not launch $uri'); 
       }
   }
 

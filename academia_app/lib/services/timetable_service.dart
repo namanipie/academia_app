@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -73,7 +74,7 @@ class TimetableService {
       
       return true;
     } catch (e) {
-      print('Error loading timetable: $e');
+      if (kDebugMode) debugPrint('Error loading timetable: $e');
       return false;
     }
   }

@@ -256,9 +256,9 @@ class CourseDetailScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: kAccentOrange.withOpacity(0.1),
+            color: kAccentOrange.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: kAccentOrange.withOpacity(0.2)),
+            border: Border.all(color: kAccentOrange.withValues(alpha:0.2)),
           ),
           child: Text(code, style: const TextStyle(color: kAccentOrange, fontWeight: FontWeight.bold, fontSize: 11)),
         ),
@@ -367,7 +367,7 @@ class CourseDetailScreen extends StatelessWidget {
                 width: 28, height: max(barHeight, 5.0),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [kAccentOrange, kAccentOrange.withOpacity(0.3)],
+                    colors: [kAccentOrange, kAccentOrange.withValues(alpha:0.3)],
                     begin: Alignment.topCenter, end: Alignment.bottomCenter,
                   ),
                   borderRadius: BorderRadius.circular(6),

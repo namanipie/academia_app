@@ -15,17 +15,17 @@ Widget build(BuildContext context) {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              const Color.fromARGB(255, 211, 213, 215).withOpacity(0.4),
-              const Color.fromARGB(255, 170, 168, 169).withOpacity(0.2),
+              const Color.fromARGB(255, 211, 213, 215).withValues(alpha:0.4),
+              const Color.fromARGB(255, 170, 168, 169).withValues(alpha:0.2),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: Colors.white.withValues(alpha:0.2)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha:0.15),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),

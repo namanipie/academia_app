@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:ui';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -75,7 +76,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoadingPosts = false);
-        debugPrint("Error fetching club posts: $e");
+        if (kDebugMode) debugPrint("Error fetching club posts: $e");
       }
     }
   }
@@ -185,7 +186,7 @@ class _ClubDetailsScreenState extends State<ClubDetailsScreen> {
                   _buildSectionTitle("About"),
                   Text(
                     widget.club.description,
-                    style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 15, height: 1.6),
+                    style: TextStyle(color: Colors.white.withValues(alpha:0.7), fontSize: 15, height: 1.6),
                   ),
                   const SizedBox(height: 40),
                   if (widget.club.coreMembers.isNotEmpty) ...[
@@ -368,7 +369,7 @@ Widget _buildClubHeader() {
         icon: const Icon(Icons.arrow_downward_rounded, color: Colors.white70, size: 18),
         label: const Text("Show Posts", style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
         style: TextButton.styleFrom(
-          backgroundColor: Colors.white.withOpacity(0.05),
+          backgroundColor: Colors.white.withValues(alpha:0.05),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         ),
@@ -400,7 +401,7 @@ Widget _buildClubHeader() {
         decoration: BoxDecoration(
           color: _isSubscribed ? Colors.transparent : Colors.white,
           borderRadius: BorderRadius.circular(30),
-          border: _isSubscribed ? Border.all(color: Colors.white.withOpacity(0.3), width: 1) : null,
+          border: _isSubscribed ? Border.all(color: Colors.white.withValues(alpha:0.3), width: 1) : null,
         ),
         child: _isProcessing
             ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.grey))
@@ -435,7 +436,7 @@ Widget _buildClubHeader() {
             decoration: BoxDecoration(
               color: const Color(0xFF111111),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              border: Border.all(color: Colors.white.withValues(alpha:0.05)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -449,7 +450,7 @@ Widget _buildClubHeader() {
                     item,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: isLink ? const Color.fromARGB(255, 192, 196, 204) : Colors.white.withOpacity(0.8),
+                      color: isLink ? const Color.fromARGB(255, 192, 196, 204) : Colors.white.withValues(alpha:0.8),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),

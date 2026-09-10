@@ -343,7 +343,7 @@ Widget _buildHeroCGPA(String cgpaVal, Map<String, String> sgpas) {
                   belowBarData: BarAreaData(
                     show: true,
                     gradient: LinearGradient(
-                      colors: [const Color.fromARGB(255, 219, 215, 215).withOpacity(0.2), const Color.fromARGB(255, 125, 121, 121).withOpacity(0)],
+                      colors: [const Color.fromARGB(255, 219, 215, 215).withValues(alpha:0.2), const Color.fromARGB(255, 125, 121, 121).withValues(alpha:0)],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
@@ -376,7 +376,7 @@ Widget _buildMiniTrend(String highestGpa) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     decoration: BoxDecoration(
-      color: const Color.fromARGB(255, 25, 26, 25).withOpacity(0.1),
+      color: const Color.fromARGB(255, 25, 26, 25).withValues(alpha:0.1),
       borderRadius: BorderRadius.circular(16),
     ),
     child: Row(
@@ -419,13 +419,13 @@ Widget _buildExpandableTile({
             color: kCardBlack,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(
-              color: isHighlight ? kAccentNeon.withOpacity(0.25) : Colors.transparent,
+              color: isHighlight ? kAccentNeon.withValues(alpha:0.25) : Colors.transparent,
               width: 1.1,
             ),
             boxShadow: isHighlight
                 ? [
                     BoxShadow(
-                      color: kAccentNeon.withOpacity(0.10),
+                      color: kAccentNeon.withValues(alpha:0.10),
                       blurRadius: 14,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),
@@ -433,7 +433,7 @@ Widget _buildExpandableTile({
                   ]
                 : [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.35),
+                      color: Colors.black.withValues(alpha:0.35),
                       blurRadius: 12,
                       spreadRadius: -2,
                       offset: const Offset(0, 3),
@@ -452,7 +452,7 @@ Widget _buildExpandableTile({
                 leading: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: kAccentNeon.withOpacity(0.08),
+                    color: kAccentNeon.withValues(alpha:0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: kAccentNeon, size: 18),

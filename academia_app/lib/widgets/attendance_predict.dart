@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -62,7 +63,7 @@ class _AttendancePredictorState extends State<AttendancePredictor> {
         });
       }
     } catch (e) {
-      debugPrint('❌ Error loading optional classes: $e');
+      if (kDebugMode) debugPrint('❌ Error loading optional classes: $e');
     }
   }
 
@@ -148,12 +149,12 @@ Future<void> _loadCalendarData() async {
         ));
       });
 
-      print('📦 Loaded calendar data from SharedPreferences');
+      if (kDebugMode) debugPrint('📦 Loaded calendar data from SharedPreferences');
     } else {
-      print('⚠️ No cached calendar data in SharedPreferences');
+      if (kDebugMode) debugPrint('⚠️ No cached calendar data in SharedPreferences');
     }
   } catch (e) {
-    print('❌ Error loading calendar data from SharedPreferences: $e');
+    if (kDebugMode) debugPrint('❌ Error loading calendar data from SharedPreferences: $e');
   }
 }
 
@@ -507,9 +508,9 @@ void _calculatePredictions() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _lightNavy.withOpacity(0.1), // Changed color
+        color: _lightNavy.withValues(alpha:0.1), // Changed color
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _lightNavy.withOpacity(0.3), width: 1), // Changed color
+        border: Border.all(color: _lightNavy.withValues(alpha:0.3), width: 1), // Changed color
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -538,7 +539,7 @@ void _calculatePredictions() {
                 decoration: BoxDecoration(
                   color: _pitchBlack,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: _lightNavy.withOpacity(0.5), width: 1), // Changed color
+                  border: Border.all(color: _lightNavy.withValues(alpha:0.5), width: 1), // Changed color
                 ),
                 child: Text(
                   '$dayOrder',
@@ -556,7 +557,7 @@ void _calculatePredictions() {
             '${_dayOrdersInRange.length} working day${_dayOrdersInRange.length != 1 ? 's' : ''}',
             style: TextStyle(
               fontSize: 12,
-              color: _white.withOpacity(0.6),
+              color: _white.withValues(alpha:0.6),
             ),
           ),
         ],
@@ -570,9 +571,9 @@ void _calculatePredictions() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _lightNavy.withOpacity(0.1), // Changed color
+        color: _lightNavy.withValues(alpha:0.1), // Changed color
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _lightNavy.withOpacity(0.3), width: 1), // Changed color
+        border: Border.all(color: _lightNavy.withValues(alpha:0.3), width: 1), // Changed color
       ),
       child: Column(
         children: [
@@ -608,7 +609,7 @@ void _calculatePredictions() {
         decoration: BoxDecoration(
           color: _pitchBlack,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: _lightNavy.withOpacity(0.5), width: 1), // Changed color
+          border: Border.all(color: _lightNavy.withValues(alpha:0.5), width: 1), // Changed color
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -619,7 +620,7 @@ void _calculatePredictions() {
                 Text(
                   label,
                   style: TextStyle(
-                    color: _white.withOpacity(0.6),
+                    color: _white.withValues(alpha:0.6),
                     fontSize: 12,
                   ),
                 ),
@@ -759,7 +760,7 @@ if (predictedConducted == 0) {
       decoration: BoxDecoration(
         color: _pitchBlack,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _lightNavy.withOpacity(0.3), width: 1), // Changed color
+        border: Border.all(color: _lightNavy.withValues(alpha:0.3), width: 1), // Changed color
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,7 +780,7 @@ if (predictedConducted == 0) {
                 'Slot: ${prediction['slot']}',
                 style: TextStyle(
                   fontSize: 11,
-                  color: _lightNavy.withOpacity(0.7), // Changed color
+                  color: _lightNavy.withValues(alpha:0.7), // Changed color
                 ),
               ),
               const SizedBox(width: 8),
@@ -787,7 +788,7 @@ if (predictedConducted == 0) {
                 '•',
                 style: TextStyle(
                   fontSize: 11,
-                  color: _white.withOpacity(0.4),
+                  color: _white.withValues(alpha:0.4),
                 ),
               ),
               const SizedBox(width: 8),
@@ -795,7 +796,7 @@ if (predictedConducted == 0) {
                 '$additionalClasses class${additionalClasses != 1 ? 'es' : ''} will be missed',
                 style: TextStyle(
                   fontSize: 11,
-                  color: _white.withOpacity(0.6),
+                  color: _white.withValues(alpha:0.6),
                 ),
               ),
             ],
@@ -821,9 +822,9 @@ if (predictedConducted == 0) {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: dropColor.withOpacity(0.1),
+              color: dropColor.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: dropColor.withOpacity(0.3), width: 1),
+              border: Border.all(color: dropColor.withValues(alpha:0.3), width: 1),
             ),
             child: Row(
               children: [
@@ -855,9 +856,9 @@ if (predictedConducted == 0) {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: targetColor.withOpacity(0.1),
+              color: targetColor.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: targetColor.withOpacity(0.3), width: 1),
+              border: Border.all(color: targetColor.withValues(alpha:0.3), width: 1),
             ),
             child: Row(
               children: [
@@ -887,7 +888,7 @@ if (predictedConducted == 0) {
         Text(
           label,
           style: TextStyle(
-            color: _white.withOpacity(0.6),
+            color: _white.withValues(alpha:0.6),
             fontSize: 12,
           ),
         ),

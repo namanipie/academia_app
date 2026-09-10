@@ -1,4 +1,5 @@
 // File: calender_widgets.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // Import for launching URLs
 import 'dart:async'; // Import for Future/async
@@ -17,7 +18,7 @@ Future<void> _launchUrl(String urlString) async {
   if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
     // In a production app, you would show a SnackBar or AlertDialog here
     // ignore: avoid_print
-    print('Could not launch $uri'); 
+    if (kDebugMode) debugPrint('Could not launch $uri'); 
   }
 }
 
@@ -286,7 +287,7 @@ class _CreateEventBottomSheetState extends State<CreateEventBottomSheet> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: isSelected
-                            ? color.withOpacity(0.9)
+                            ? color.withValues(alpha:0.9)
                             : const Color(0xFF1A1A1A),
               
                       ),
@@ -508,7 +509,7 @@ class DateCellWidget extends StatelessWidget {
           decoration: BoxDecoration(
               color: isToday 
               ? const Color.fromARGB(255, 120, 119, 119) 
-              : (hasEvents ? mainColor.withOpacity(0.2) : Colors.transparent),
+              : (hasEvents ? mainColor.withValues(alpha:0.2) : Colors.transparent),
             shape: BoxShape.circle,
             border: Border.all(
               color: isToday ? const Color.fromARGB(255, 130, 129, 129) : (hasEvents ? mainColor : Colors.transparent),
@@ -600,7 +601,7 @@ class EventItemWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF2A2A2A),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5), width: 2),
+        border: Border.all(color: color.withValues(alpha:0.5), width: 2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

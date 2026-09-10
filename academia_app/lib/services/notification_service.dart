@@ -1,6 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -28,7 +28,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       settings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
-        print('Notification clicked: ${response.payload}');
+        if (kDebugMode) debugPrint('Notification clicked: ${response.payload}');
       },
     );
 
@@ -67,7 +67,7 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(scheduledChannel);
         
-    print('Notification channels created');
+    if (kDebugMode) debugPrint('Notification channels created');
   }
 
   /// Request notification permission (Android 13+)
@@ -75,20 +75,20 @@ class NotificationService {
     // For Android 13+ (API 33+)
     if (await Permission.notification.isDenied) {
       final status = await Permission.notification.request();
-      print('Notification permission: $status');
+      if (kDebugMode) debugPrint('Notification permission: $status');
     }
     
     // For exact alarms (Android 12+) - CRITICAL for scheduled notifications
     if (await Permission.scheduleExactAlarm.isDenied) {
       final status = await Permission.scheduleExactAlarm.request();
-      print('Exact alarm permission: $status');
+      if (kDebugMode) debugPrint('Exact alarm permission: $status');
     }
     
     // Check if permissions are granted
     final notifStatus = await Permission.notification.status;
     final alarmStatus = await Permission.scheduleExactAlarm.status;
-    print('Final notification status: $notifStatus');
-    print('Final exact alarm status: $alarmStatus');
+    if (kDebugMode) debugPrint('Final notification status: $notifStatus');
+    if (kDebugMode) debugPrint('Final exact alarm status: $alarmStatus');
   }
 
   /// Show a notification immediately
@@ -113,7 +113,7 @@ class NotificationService {
         NotificationDetails(android: androidDetails);
 
     await _notificationsPlugin.show(id, title, body, platformDetails);
-    print('Immediate notification shown with ID: $id');
+    if (kDebugMode) debugPrint('Immediate notification shown with ID: $id');
   }
 
   /// Schedule notification with enhanced debugging
@@ -126,7 +126,7 @@ class NotificationService {
     // Check permissions first
     final alarmPermission = await Permission.scheduleExactAlarm.status;
     if (!alarmPermission.isGranted) {
-      print('ERROR: Exact alarm permission not granted!');
+      if (kDebugMode) debugPrint('ERROR: Exact alarm permission not granted!');
       await Permission.scheduleExactAlarm.request();
       return;
     }
@@ -136,16 +136,16 @@ class NotificationService {
     final scheduledTime = tz.TZDateTime.from(dateTime, tz.local);
     
     // Debug: Print scheduled time
-    print('═══════════════════════════════════════');
-    print('SCHEDULING NOTIFICATION');
-    print('Current time (local): $now');
-    print('Scheduled time (local): $scheduledTime');
-    print('Time difference: ${scheduledTime.difference(now).inSeconds} seconds');
-    print('═══════════════════════════════════════');
+    if (kDebugMode) debugPrint('═══════════════════════════════════════');
+    if (kDebugMode) debugPrint('SCHEDULING NOTIFICATION');
+    if (kDebugMode) debugPrint('Current time (local): $now');
+    if (kDebugMode) debugPrint('Scheduled time (local): $scheduledTime');
+    if (kDebugMode) debugPrint('Time difference: ${scheduledTime.difference(now).inSeconds} seconds');
+    if (kDebugMode) debugPrint('═══════════════════════════════════════');
     
     // Safety check: Don't schedule in the past
     if (scheduledTime.isBefore(now)) {
-      print('ERROR: Cannot schedule notification in the past!');
+      if (kDebugMode) debugPrint('ERROR: Cannot schedule notification in the past!');
       return;
     }
 
@@ -177,34 +177,34 @@ class NotificationService {
             UILocalNotificationDateInterpretation.absoluteTime,
       );
       
-      print('✅ Notification scheduled successfully with ID: $id');
+      if (kDebugMode) debugPrint('✅ Notification scheduled successfully with ID: $id');
       
       // Verify it was scheduled
       await checkPendingNotifications();
     } catch (e) {
-      print('❌ Error scheduling notification: $e');
+      if (kDebugMode) debugPrint('❌ Error scheduling notification: $e');
     }
   }
 
   /// Cancel a specific notification
   static Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
-    print('Notification $id cancelled');
+    if (kDebugMode) debugPrint('Notification $id cancelled');
   }
 
   /// Cancel all notifications
   static Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
-    print('All notifications cancelled');
+    if (kDebugMode) debugPrint('All notifications cancelled');
   }
   
   /// Check pending notifications (for debugging)
   static Future<void> checkPendingNotifications() async {
     final pendingNotifications = await _notificationsPlugin.pendingNotificationRequests();
-    print('───────────────────────────────────────');
-    print('Pending notifications: ${pendingNotifications.length}');
+    if (kDebugMode) debugPrint('───────────────────────────────────────');
+    if (kDebugMode) debugPrint('Pending notifications: ${pendingNotifications.length}');
     for (var notification in pendingNotifications) {
-      print('  ID: ${notification.id}, Title: ${notification.title}');
+      if (kDebugMode) debugPrint('  ID: ${notification.id}, Title: ${notification.title}');
     }
-    print('───────────────────────────────────────');
+    if (kDebugMode) debugPrint('───────────────────────────────────────');
   }}

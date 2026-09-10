@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -28,8 +29,8 @@ class DayOrderManager {
     
     await prefs.setString(_dayOrderBackupKey, jsonEncode(forecast));
     
-    print('✅ Day order backup saved: DO $currentDayOrder on ${_formatDate(currentDate)}');
-    print('✅ Generated ${forecast.length} days of forecast');
+    if (kDebugMode) debugPrint('✅ Day order backup saved: DO $currentDayOrder on ${_formatDate(currentDate)}');
+    if (kDebugMode) debugPrint('✅ Generated ${forecast.length} days of forecast');
   }
   
   /// Get day order for a specific date (fallback when API fails)
@@ -38,7 +39,7 @@ class DayOrderManager {
     final backupJson = prefs.getString(_dayOrderBackupKey);
     
     if (backupJson == null) {
-      print('⚠️ No day order backup found');
+      if (kDebugMode) debugPrint('⚠️ No day order backup found');
       return null;
     }
     
@@ -48,15 +49,15 @@ class DayOrderManager {
       
       if (backup.containsKey(dateKey)) {
         final dayOrder = backup[dateKey] as int;
-        print('✅ Found day order in backup: DO $dayOrder for $dateKey');
+        if (kDebugMode) debugPrint('✅ Found day order in backup: DO $dayOrder for $dateKey');
         return dayOrder;
       } else {
-        print('⚠️ Date $dateKey not found in backup');
+        if (kDebugMode) debugPrint('⚠️ Date $dateKey not found in backup');
         // Try to extend forecast if date is beyond saved range
         return await _extendForecastAndGet(date);
       }
     } catch (e) {
-      print('❌ Error reading day order backup: $e');
+      if (kDebugMode) debugPrint('❌ Error reading day order backup: $e');
       return null;
     }
   }
@@ -81,7 +82,7 @@ static Future<Map<String, int>> _generateDayOrderForecast({
     if (isHoliday) {
       // 🔹 Keep previous working day's day order (don’t increment yet)
       forecast[dateKey] = currentDayOrder;
-      print('🏖️ Holiday detected on $dateKey, keeping DO $currentDayOrder');
+      if (kDebugMode) debugPrint('🏖️ Holiday detected on $dateKey, keeping DO $currentDayOrder');
     } else {
       // 🔹 For a working day, we assign the current DO
       forecast[dateKey] = currentDayOrder;
@@ -104,7 +105,7 @@ static Future<Map<String, int>> _generateDayOrderForecast({
     final lastKnownDateStr = prefs.getString(_lastKnownDateKey);
     
     if (lastKnownDayOrder == null || lastKnownDateStr == null) {
-      print('⚠️ Cannot extend forecast: no last known data');
+      if (kDebugMode) debugPrint('⚠️ Cannot extend forecast: no last known data');
       return null;
     }
     
@@ -112,7 +113,7 @@ static Future<Map<String, int>> _generateDayOrderForecast({
     final daysDifference = targetDate.difference(lastKnownDate).inDays;
     
     if (daysDifference < 0) {
-      print('⚠️ Target date is in the past');
+      if (kDebugMode) debugPrint('⚠️ Target date is in the past');
       return null;
     }
     
@@ -179,7 +180,7 @@ static Future<Map<String, int>> _generateDayOrderForecast({
     }
     
     // API didn't return day order, use backup
-    print('⚠️ API day order missing, checking backup...');
+    if (kDebugMode) debugPrint('⚠️ API day order missing, checking backup...');
     return await getDayOrderForDate(DateTime.now());
   }
   
@@ -189,7 +190,7 @@ static Future<Map<String, int>> _generateDayOrderForecast({
     await prefs.remove(_dayOrderBackupKey);
     await prefs.remove(_lastKnownDayOrderKey);
     await prefs.remove(_lastKnownDateKey);
-    print('🗑️ Day order backup cleared');
+    if (kDebugMode) debugPrint('🗑️ Day order backup cleared');
   }
   
   /// Get backup status for debugging
@@ -231,11 +232,11 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
       CalendarCache.lastRefresh != null &&
       DateTime.now().difference(CalendarCache.lastRefresh!) <
           CalendarCache.cacheDuration) {
-    print('⚡ Using cached calendar data (no Firestore call)');
+    if (kDebugMode) debugPrint('⚡ Using cached calendar data (no Firestore call)');
     return CalendarCache.lastData!;
   }
 
-  print('☁️ Fetching calendar data from Firestore...');
+  if (kDebugMode) debugPrint('☁️ Fetching calendar data from Firestore...');
 
   final FirebaseFirestore db = FirebaseFirestore.instance;
   Map<String, Map<String, dynamic>> eventsData = {};
@@ -258,22 +259,22 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
     }
 
     if (eventsData.isEmpty) {
-      print(isOffline
+      if (kDebugMode) debugPrint(isOffline
           ? '⚠️ No cached calendar data found (offline).'
           : '⚠️ No calendar data found in Firestore.');
     } else {
-      print('✅ Calendar data fetched from ${isOffline ? 'cache' : 'server/cache'}.');
+      if (kDebugMode) debugPrint('✅ Calendar data fetched from ${isOffline ? 'cache' : 'server/cache'}.');
 
       // Cache it
       CalendarCache.lastData = eventsData;
       CalendarCache.lastRefresh = DateTime.now();
     }
   } catch (e) {
-    print('❌ Error fetching Firestore data: $e');
+    if (kDebugMode) debugPrint('❌ Error fetching Firestore data: $e');
 
     // Fallback to last cached data if available
     if (CalendarCache.lastData != null) {
-      print('⚠️ Using previous cached calendar data.');
+      if (kDebugMode) debugPrint('⚠️ Using previous cached calendar data.');
       return CalendarCache.lastData!;
     }
   }

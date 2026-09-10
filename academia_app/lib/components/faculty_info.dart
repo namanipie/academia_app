@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/theme_controller.dart';
 
 // --- SHARED DESIGN CONSTANTS ---
 const Color kPitchBlack = Color(0xFF000000);
@@ -27,38 +28,46 @@ class FacultyInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fa = advisors?['faculty_advisor'];
-    final aa = advisors?['academic_advisor'];
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        final theme = ThemeController.instance;
+        final fa = advisors?['faculty_advisor'];
+        final aa = advisors?['academic_advisor'];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(left: 4, bottom: 12),
-          child: Text(
-            ' Advisors',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: -0.5,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 12),
+              child: Text(
+                ' Advisors',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: theme.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
             ),
-          ),
-        ),
-        _buildAdvisorCard(
-          role: 'Faculty Advisor',
-          name: fa?['name'] ?? 'Not Assigned',
-          email: fa?['email'] ?? 'No email provided',
-          phone: fa?['phone'] ?? 'No phone provided',
-        ),
-        const SizedBox(height: 12),
-        _buildAdvisorCard(
-          role: 'Academic Advisor',
-          name: aa?['name'] ?? 'Not Assigned',
-          email: aa?['email'] ?? 'No email provided',
-          phone: aa?['phone'] ?? 'No phone provided',
-        ),
+            _buildAdvisorCard(
+              role: 'Faculty Advisor',
+              name: fa?['name'] ?? 'Not Assigned',
+              email: fa?['email'] ?? 'No email provided',
+              phone: fa?['phone'] ?? 'No phone provided',
+              theme: theme,
+            ),
+            const SizedBox(height: 12),
+            _buildAdvisorCard(
+              role: 'Academic Advisor',
+              name: aa?['name'] ?? 'Not Assigned',
+              email: aa?['email'] ?? 'No email provided',
+              phone: aa?['phone'] ?? 'No phone provided',
+              theme: theme,
+            ),
       ],
+        );
+      }
     );
   }
 
@@ -69,13 +78,15 @@ class FacultyInfo extends StatelessWidget {
     required String name,
     required String email,
     required String phone,
+    required ThemeController theme,
   }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: kCardBlack,
+        color: theme.cardBg,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: theme.textSecondary.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,8 +94,8 @@ class FacultyInfo extends StatelessWidget {
           // Role Label
           Text(
             role.toUpperCase(),
-            style: const TextStyle(
-              color: kAccentOrange, 
+            style: TextStyle(
+              color: theme.primaryAccent, 
               fontSize: 10, 
               fontWeight: FontWeight.bold,
               letterSpacing: 1.1,
@@ -94,8 +105,8 @@ class FacultyInfo extends StatelessWidget {
           // Name
           Text(
             name,
-            style: const TextStyle(
-              color: Colors.white, 
+            style: TextStyle(
+              color: theme.textPrimary, 
               fontSize: 17, 
               fontWeight: FontWeight.bold
             ),
@@ -103,30 +114,30 @@ class FacultyInfo extends StatelessWidget {
           const SizedBox(height: 16),
           
           // Static Info Rows (Visible but not clickable)
-          _buildInfoRow(Icons.alternate_email_rounded, email),
+          _buildInfoRow(Icons.alternate_email_rounded, email, theme),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.phone_iphone_rounded, phone),
+          _buildInfoRow(Icons.phone_iphone_rounded, phone, theme),
           
           const SizedBox(height: 20),
           
           // Action Button (Only Call)
           if (phone != 'No phone provided' && phone.isNotEmpty)
-            _buildCallButton(onTap: () => _makeCall(phone)),
+            _buildCallButton(onTap: () => _makeCall(phone), theme: theme),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text) {
+  Widget _buildInfoRow(IconData icon, String text, ThemeController theme) {
     return Row(
       children: [
-        Icon(icon, color: Colors.white24, size: 14),
+        Icon(icon, color: theme.textSecondary.withValues(alpha: 0.5), size: 14),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
-              color: Colors.white70, 
+            style: TextStyle(
+              color: theme.textSecondary, 
               fontSize: 13,
               fontWeight: FontWeight.w400,
             ),
@@ -137,34 +148,36 @@ class FacultyInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildCallButton({required VoidCallback onTap}) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: kSurfaceGrey,
-            borderRadius: BorderRadius.circular(30),
+  Widget _buildCallButton({required VoidCallback onTap, required ThemeController theme}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: theme.primaryAccent.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: theme.primaryAccent.withValues(alpha: 0.2),
+            width: 1,
           ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.phone_in_talk_rounded, color: kAccentOrange, size: 16),
-              const SizedBox(width: 10),
-              Text(
-                'Call Advisor',
-                style: TextStyle(
-                  color: Colors.white, 
-                  fontSize: 14, 
-                  fontWeight: FontWeight.w600
-                ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.call_rounded, color: theme.primaryAccent, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              'CALL NOW',
+              style: TextStyle(
+                color: theme.primaryAccent,
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                letterSpacing: 0.5,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

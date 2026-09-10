@@ -1,4 +1,5 @@
 // File: calendar_screen.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Note: Assuming 'calender_widgets.dart' is correctly resolved by the path '../widgets/calender_widgets.dart'
@@ -141,12 +142,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 _initialDayOrder = parsedOrder;
             } else {
                 // ignore: avoid_print
-                print("Warning: Parsed day_order is invalid (not 1-5). Value: $order");
+                if (kDebugMode) debugPrint("Warning: Parsed day_order is invalid (not 1-5). Value: $order");
             }
         }
       } catch (e) {
         // ignore: avoid_print
-        print("Error decoding userData or finding day_order: $e");
+        if (kDebugMode) debugPrint("Error decoding userData or finding day_order: $e");
       }
     }
     // Note: We avoid calling setState here, as it's called once in _initializeData after all data loads.
@@ -482,7 +483,7 @@ List<Map<String, dynamic>> _getAllCustomEvents() {
                           ),
                         );
                       } else {
-                        print('Invalid day order: $dayOrderStr');
+                        if (kDebugMode) debugPrint('Invalid day order: $dayOrderStr');
                       }
                     }
                   },
@@ -567,7 +568,7 @@ List<Map<String, dynamic>> _getAllCustomEvents() {
                         ),
                       );
                     } else {
-                      print('Invalid day order: $dayOrderStr');
+                      if (kDebugMode) debugPrint('Invalid day order: $dayOrderStr');
                     }
                   }
                 },

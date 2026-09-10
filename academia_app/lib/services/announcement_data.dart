@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -27,7 +28,7 @@ Future<Map<String, AnnouncementMap>> getEventsData() async {
       final cachedString = prefs.getString(AnnouncementCache.dataKey);
 
       if (cachedString != null) {
-        print("⚡ Using persistent cached data (no Firestore call)");
+        if (kDebugMode) debugPrint("⚡ Using persistent cached data (no Firestore call)");
 
         final Map<String, dynamic> decoded = jsonDecode(cachedString);
 
@@ -38,7 +39,7 @@ Future<Map<String, AnnouncementMap>> getEventsData() async {
   }
 
   // 🔴 Only reaches here if cache expired or not present
-  print("☁ Fetching from Firestore...");
+  if (kDebugMode) debugPrint("☁ Fetching from Firestore...");
 
   Map<String, AnnouncementMap> eventsData = {};
 
@@ -62,15 +63,15 @@ Future<Map<String, AnnouncementMap>> getEventsData() async {
       now.millisecondsSinceEpoch,
     );
 
-    print("✅ Data saved locally");
+    if (kDebugMode) debugPrint("✅ Data saved locally");
 
   } catch (e) {
-    print("❌ Firestore fetch failed: $e");
+    if (kDebugMode) debugPrint("❌ Firestore fetch failed: $e");
 
     // 🔹 Fallback to cache even if expired
     final cachedString = prefs.getString(AnnouncementCache.dataKey);
     if (cachedString != null) {
-      print("⚠ Using stale cached data");
+      if (kDebugMode) debugPrint("⚠ Using stale cached data");
 
       final Map<String, dynamic> decoded = jsonDecode(cachedString);
 

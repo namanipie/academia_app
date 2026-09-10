@@ -163,7 +163,7 @@ class _MessMenuScreenState extends State<MessMenuScreen> with TickerProviderStat
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.restaurant_rounded, size: 64, color: activeColor.withOpacity(0.2)),
+          Icon(Icons.restaurant_rounded, size: 64, color: activeColor.withValues(alpha:0.2)),
           const SizedBox(height: 16),
           Text(
             "NO DATA AVAILABLE",
@@ -222,7 +222,7 @@ Widget _buildContinuousDaySelector(Color activeColor) {
     height: 54, // Fixed height for a sleeker profile
     margin: const EdgeInsets.symmetric(horizontal: 16),
     decoration: BoxDecoration(
-      color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.5), // Subtle glass effect
+      color: const Color.fromARGB(255, 0, 0, 0).withValues(alpha:0.5), // Subtle glass effect
       borderRadius: BorderRadius.circular(16), // Softer corners
     ),
     child: TabBar(
@@ -232,7 +232,7 @@ Widget _buildContinuousDaySelector(Color activeColor) {
       
       // Modern "Pill" Indicator
       indicator: BoxDecoration(
-        color: activeColor.withOpacity(0.15), // Very soft tinted background
+        color: activeColor.withValues(alpha:0.15), // Very soft tinted background
         borderRadius: BorderRadius.circular(24),
 
       ),
@@ -303,7 +303,7 @@ Widget _buildContinuousDaySelector(Color activeColor) {
         color: kCardBlack,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isLive ? activeColor.withOpacity(0.4) : const Color.fromARGB(244, 0, 0, 0).withOpacity(0.05),
+          color: isLive ? activeColor.withValues(alpha:0.4) : const Color.fromARGB(244, 0, 0, 0).withValues(alpha:0.05),
           width: 1.5,
         ),
       ),
@@ -345,10 +345,10 @@ Widget _buildContinuousDaySelector(Color activeColor) {
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isLive ? activeColor.withOpacity(0.08) : kSurfaceGrey,
+                color: isLive ? activeColor.withValues(alpha:0.08) : kSurfaceGrey,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: isLive ? activeColor.withOpacity(0.15) : Colors.transparent
+                  color: isLive ? activeColor.withValues(alpha:0.15) : Colors.transparent
                 ),
               ),
               child: Text(

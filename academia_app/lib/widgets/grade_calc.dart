@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -103,7 +104,7 @@ class _GradeCalculatorState extends State<GradeCalculator> {
         });
       }
     } catch (e) {
-      print('Error loading courses: $e');
+      if (kDebugMode) debugPrint('Error loading courses: $e');
       setState(() {
         courses = [];
         isLoading = false;
@@ -416,7 +417,7 @@ class _CourseMarksCard extends StatelessWidget {
               activeTrackColor: const Color.fromARGB(255, 222, 228, 232),
               inactiveTrackColor: Colors.grey[800],
               thumbColor: const Color.fromARGB(255, 102, 106, 109),
-              overlayColor: Colors.blue.withOpacity(0.2),
+              overlayColor: Colors.blue.withValues(alpha:0.2),
               trackHeight: 4,
             ),
             child: Slider(
@@ -451,10 +452,10 @@ class _CourseMarksCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isAchievable ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+              color: isAchievable ? Colors.green.withValues(alpha:0.1) : Colors.orange.withValues(alpha:0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isAchievable ? Colors.green.withOpacity(0.3) : Colors.orange.withOpacity(0.3),
+                color: isAchievable ? Colors.green.withValues(alpha:0.3) : Colors.orange.withValues(alpha:0.3),
                 width: 1,
               ),
             ),
@@ -514,7 +515,7 @@ class _CourseMarksCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withValues(alpha:0.3),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(

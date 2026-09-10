@@ -1,4 +1,5 @@
 // File: timetable_screen.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../services/timetable_service.dart';
 import '../widgets/day_order_card.dart';
@@ -114,7 +115,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         }
       }
     } catch (e) {
-      debugPrint('❌ Error checking holiday: $e');
+      if (kDebugMode) debugPrint('❌ Error checking holiday: $e');
     }
   }
 
@@ -126,8 +127,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            _holidayOrange.withOpacity(0.9),
-            _holidayGold.withOpacity(0.8),
+            _holidayOrange.withValues(alpha:0.9),
+            _holidayGold.withValues(alpha:0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -136,7 +137,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         border: Border.all(color: _holidayGold, width: 2),
         boxShadow: [
           BoxShadow(
-            color: _holidayGold.withOpacity(0.5),
+            color: _holidayGold.withValues(alpha:0.5),
             blurRadius: 20,
             spreadRadius: -5,
           ),
@@ -168,7 +169,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: _white.withOpacity(0.2),
+              color: _white.withValues(alpha:0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Row(
@@ -192,7 +193,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           Text(
             'Swipe to view timetable for other days',
             style: TextStyle(
-              color: _white.withOpacity(0.9),
+              color: _white.withValues(alpha:0.9),
               fontSize: 12,
               fontStyle: FontStyle.italic,
             ),
@@ -211,7 +212,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           Icon(
             Icons.calendar_month_outlined,
             size: 80,
-            color: _neonPink.withOpacity(0.3),
+            color: _neonPink.withValues(alpha:0.3),
           ),
           const SizedBox(height: 20),
           const Text(
@@ -228,7 +229,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
-              color: _white.withOpacity(0.5),
+              color: _white.withValues(alpha:0.5),
             ),
           ),
         ],
@@ -286,7 +287,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                               decoration: BoxDecoration(
                                 color: isActive
                                     ? _neonPink
-                                    : _white.withOpacity(0.3),
+                                    : _white.withValues(alpha:0.3),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),

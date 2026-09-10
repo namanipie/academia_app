@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -130,7 +131,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
         }
       }
     } catch (e) {
-      debugPrint("Error loading likes from cache: $e");
+      if (kDebugMode) debugPrint("Error loading likes from cache: $e");
     }
   }
 
@@ -201,7 +202,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
       cachedData['posts'] = posts;
       await prefs.setString('cached_posts_list', jsonEncode(cachedData));
     } catch (e) {
-      debugPrint("Error updating post in local cache: $e");
+      if (kDebugMode) debugPrint("Error updating post in local cache: $e");
     }
   }
 
@@ -523,7 +524,7 @@ Future<void> _handleLinkClick(String url) async {
           SnackBar(content: Text('Could not open the link')),
         );
       }
-      print('Could not launch $url');
+      if (kDebugMode) debugPrint('Could not launch $url');
     }
 }
 

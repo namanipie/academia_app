@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:ui';
 
@@ -86,7 +87,7 @@ Future<void> _loadMarksFromPrefs() async {
             candidate = json.decode(candidate);
           } catch (e) {
             // ignore: avoid_print
-            print('Failed to decode attendance.marks string: $e');
+            if (kDebugMode) debugPrint('Failed to decode attendance.marks string: $e');
           }
         }
         marksRoot = candidate;
@@ -94,6 +95,7 @@ Future<void> _loadMarksFromPrefs() async {
     }
 
     if (marksRoot != null && marksRoot is Map) {
+      if (kDebugMode) debugPrint('DEBUG MARKS: $marksRoot');
       final parsed = <Map<String, dynamic>>[];
 
       // build fallback courseTitleMap from attendance (only if timetable mapping missing)
@@ -174,7 +176,7 @@ Future<void> _loadMarksFromPrefs() async {
   } catch (e) {
     // ignore or log
     // ignore: avoid_print
-    print('Error loading marks: $e');
+    if (kDebugMode) debugPrint('Error loading marks: $e');
   } finally {
     setState(() => _loading = false);
   }
@@ -241,34 +243,40 @@ Future<void> _loadMarksFromPrefs() async {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          if (_marks.isNotEmpty) ...[
             MarksStatsWidget(
               marks: _marks,
               courseCredits: _courseCredits,
             ),
-          if (_marks.isNotEmpty) ...[
-            // Assuming MarksStatsWidget uses the global color constants, 
-            // no change is needed here, but its implementation should also 
-            // adhere to the new palette.
-
             const SizedBox(height: 20),
             ..._marks.map((course) => _buildCourseMarksCard(course))
           ] else
                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    padding: const EdgeInsets.symmetric(vertical: 60),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.folder_off_rounded,
-                          color: _white.withOpacity(0.35),
-                          size: 40,
+                          color: _white.withValues(alpha: 0.2),
+                          size: 60,
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 20),
                         Text(
-                          'No Marks data available',
+                          'Bruh, no marks yet? 💀',
                           style: TextStyle(
-                            color: _white.withOpacity(0.4),
-                            fontSize: 15,
+                            color: _white.withValues(alpha: 0.8),
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Cook up some grades and check back later.',
+                          style: TextStyle(
+                            color: _white.withValues(alpha: 0.4),
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -307,7 +315,7 @@ Future<void> _loadMarksFromPrefs() async {
     decoration: BoxDecoration(
       color: _cardBg,
       borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: _white.withOpacity(0.05)),
+      border: Border.all(color: _white.withValues(alpha:0.05)),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +356,7 @@ Future<void> _loadMarksFromPrefs() async {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
-                        color: _white.withOpacity(0.4),
+                        color: _white.withValues(alpha:0.4),
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -370,7 +378,7 @@ Future<void> _loadMarksFromPrefs() async {
                     '${totalObtained.toStringAsFixed(1)} / ${totalMax.toStringAsFixed(0)}',
                     style: TextStyle(
                       fontSize: 11,
-                      color: _white.withOpacity(0.5),
+                      color: _white.withValues(alpha:0.5),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -401,14 +409,14 @@ Future<void> _loadMarksFromPrefs() async {
             children: [
               Row(
                 children: [
-                  Icon(Icons.analytics_outlined, size: 14, color: _white.withOpacity(0.3)),
+                  Icon(Icons.analytics_outlined, size: 14, color: _white.withValues(alpha:0.3)),
                   const SizedBox(width: 6),
                   Text(
                     "DETAILED PERFORMANCE",
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
-                      color: _white.withOpacity(0.3),
+                      color: _white.withValues(alpha:0.3),
                       letterSpacing: 1,
                     ),
                   ),
@@ -437,7 +445,7 @@ Widget _buildModernTestRow(Map<String, dynamic> test) {
               Text(
                 test['name'],
                 style: TextStyle(
-                  color: _white.withOpacity(0.9),
+                  color: _white.withValues(alpha:0.9),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -445,7 +453,7 @@ Widget _buildModernTestRow(Map<String, dynamic> test) {
               const SizedBox(height: 2),
               Text(
                 '${test['obtained']} / ${test['max']} marks',
-                style: TextStyle(color: _white.withOpacity(0.4), fontSize: 11),
+                style: TextStyle(color: _white.withValues(alpha:0.4), fontSize: 11),
               ),
             ],
           ),
@@ -453,9 +461,9 @@ Widget _buildModernTestRow(Map<String, dynamic> test) {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha:0.1),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.2)),
+            border: Border.all(color: color.withValues(alpha:0.2)),
           ),
           child: Text(
             '${(test['percentage'] as double).toStringAsFixed(0)}%',
@@ -547,7 +555,7 @@ class _MarksTrendPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [lineColor.withOpacity(0.2), lineColor.withOpacity(0.0)],
+        colors: [lineColor.withValues(alpha:0.2), lineColor.withValues(alpha:0.0)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawPath(fillPath, fillPaint);
 
@@ -561,7 +569,7 @@ class _MarksTrendPainter extends CustomPainter {
 
     // Draw Last Point Glow
     final glowPaint = Paint()
-      ..color = lastPointColor.withOpacity(0.3)
+      ..color = lastPointColor.withValues(alpha:0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
     canvas.drawCircle(points.last, 6, glowPaint);
     canvas.drawCircle(points.last, 3, Paint()..color = lastPointColor);

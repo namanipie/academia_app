@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -100,7 +101,7 @@ class ApiService {
 
 
   Future<Map<String, dynamic>> toggleSubscription(String clubId, String email) async {
-  print("Toggling subscription for clubId: $clubId, email: $email");
+  if (kDebugMode) debugPrint("Toggling subscription for clubId: $clubId, email: $email");
 
   final response = await http.post(
     Uri.parse('$baseUrl/clubs/$clubId/subscribe'),
@@ -111,7 +112,7 @@ class ApiService {
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
 
-    print("Subscription toggle response: $data");
+    if (kDebugMode) debugPrint("Subscription toggle response: $data");
 
     final String status = data['status'] ?? '';
     final String topic = "club_$clubId";
@@ -119,15 +120,15 @@ class ApiService {
     try {
       if (status == "subscribed") {
         await FirebaseMessaging.instance.subscribeToTopic(topic);
-        print("✅ Subscribed to topic: $topic");
+        if (kDebugMode) debugPrint("✅ Subscribed to topic: $topic");
       } else if (status == "unsubscribed") {
         await FirebaseMessaging.instance.unsubscribeFromTopic(topic);
-        print("❌ Unsubscribed from topic: $topic");
+        if (kDebugMode) debugPrint("❌ Unsubscribed from topic: $topic");
       } else {
-        print("⚠ Unknown subscription status: $status");
+        if (kDebugMode) debugPrint("⚠ Unknown subscription status: $status");
       }
     } catch (e) {
-      print("⚠ FCM topic update failed: $e");
+      if (kDebugMode) debugPrint("⚠ FCM topic update failed: $e");
     }
 
     return data;
@@ -140,7 +141,7 @@ class ApiService {
   /// Call this after app initialization, login, or when FCM token is refreshed.
   /// This ensures the user receives notifications even after app reinstall or token expiry.
   Future<void> autoResubscribeToClubs(String userEmail) async {
-    print("🔄 Starting auto-resubscription for email: $userEmail");
+    if (kDebugMode) debugPrint("🔄 Starting auto-resubscription for email: $userEmail");
     
     try {
       final clubs = await getClubs(forceRefresh: true);
@@ -152,16 +153,16 @@ class ApiService {
           
           try {
             await FirebaseMessaging.instance.subscribeToTopic(topic);
-            print("✅ Auto-resubscribed to topic: $topic (${club.name})");
+            if (kDebugMode) debugPrint("✅ Auto-resubscribed to topic: $topic (${club.name})");
           } catch (e) {
-            print("⚠ Failed to auto-resubscribe to topic $topic: $e");
+            if (kDebugMode) debugPrint("⚠ Failed to auto-resubscribe to topic $topic: $e");
           }
         }
       }
       
-      print("✅ Auto-resubscription completed for $userEmail");
+      if (kDebugMode) debugPrint("✅ Auto-resubscription completed for $userEmail");
     } catch (e) {
-      print("❌ Auto-resubscription failed: $e");
+      if (kDebugMode) debugPrint("❌ Auto-resubscription failed: $e");
       rethrow;
     }
   }
@@ -169,20 +170,20 @@ class ApiService {
   /// Manually sync Firebase subscriptions with known subscribed clubs.
   /// Use this if you have a cached list of subscribed club IDs.
   Future<void> syncFirebaseSubscriptions(List<String> subscribedClubIds) async {
-    print("🔄 Syncing Firebase subscriptions for ${subscribedClubIds.length} club(s)");
+    if (kDebugMode) debugPrint("🔄 Syncing Firebase subscriptions for ${subscribedClubIds.length} club(s)");
     
     for (var clubId in subscribedClubIds) {
       final String topic = "club_$clubId";
       
       try {
         await FirebaseMessaging.instance.subscribeToTopic(topic);
-        print("✅ Synced subscription to topic: $topic");
+        if (kDebugMode) debugPrint("✅ Synced subscription to topic: $topic");
       } catch (e) {
-        print("⚠ Failed to sync topic $topic: $e");
+        if (kDebugMode) debugPrint("⚠ Failed to sync topic $topic: $e");
       }
     }
     
-    print("✅ Firebase subscription sync completed");
+    if (kDebugMode) debugPrint("✅ Firebase subscription sync completed");
   }
 
   Future<Club> createClub({

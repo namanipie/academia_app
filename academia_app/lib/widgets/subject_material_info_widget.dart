@@ -191,7 +191,7 @@ Widget build(BuildContext context) {
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     color:
-                                        sectionColor.withOpacity(0.1),
+                                        sectionColor.withValues(alpha:0.1),
                                     borderRadius:
                                         BorderRadius.circular(8),
                                   ),
@@ -237,7 +237,7 @@ Widget build(BuildContext context) {
                 child: Text(
                   'Some materials are sourced from Studique',
                   style: TextStyle(
-                    color: textMuted.withOpacity(0.6),
+                    color: textMuted.withValues(alpha:0.6),
                     fontSize: 11,
                     letterSpacing: 0.2,
                   ),
@@ -262,10 +262,10 @@ Widget _buildValueWidget(BuildContext ctx, dynamic value, Color accentColor) {
             padding: const EdgeInsets.all(12), // Increased padding slightly
             decoration: BoxDecoration(
               // CHANGE 1: BG is now the section color (accentColor) with opacity
-              color: accentColor.withOpacity(0.2),
+              color: accentColor.withValues(alpha:0.2),
               borderRadius: BorderRadius.circular(12),
               // Optional: Add a subtle border to make the color pop nicely
-              border: Border.all(color: accentColor.withOpacity(0.3), width: 1),
+              border: Border.all(color: accentColor.withValues(alpha:0.3), width: 1),
             ),
             child: Row(
               children: [

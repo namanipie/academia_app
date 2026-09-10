@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -32,7 +33,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
       MaterialsCache.lastRefresh != null &&
       DateTime.now().difference(MaterialsCache.lastRefresh!) <
           MaterialsCache.cacheDuration) {
-    print('⚡ Using in-memory materials cache (no Firestore call)');
+    if (kDebugMode) debugPrint('⚡ Using in-memory materials cache (no Firestore call)');
     if (!fetchAll && semKey != null) {
       final single = <String, Map<String, dynamic>>{};
       final entry = MaterialsCache.lastData![semKey];
@@ -50,7 +51,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
     if (cachedJson != null && cachedTime != null) {
       final savedTime = DateTime.fromMillisecondsSinceEpoch(cachedTime);
       if (DateTime.now().difference(savedTime) < MaterialsCache.cacheDuration) {
-        print('📦 Using SharedPreferences materials cache');
+        if (kDebugMode) debugPrint('📦 Using SharedPreferences materials cache');
 
         final decodedRaw = jsonDecode(cachedJson) as Map<String, dynamic>;
         final decoded = decodedRaw.map((sem, value) {
@@ -74,7 +75,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
   }
 
   // 3) Fetch from Firestore (or cache if offline)
-  print('☁ Fetching materials data from Firestore (forceServer=$forceServer)...');
+  if (kDebugMode) debugPrint('☁ Fetching materials data from Firestore (forceServer=$forceServer)...');
   final FirebaseFirestore db = FirebaseFirestore.instance;
   final Map<String, Map<String, dynamic>> materialsMap = {};
 
@@ -89,11 +90,11 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
 
     // Debug: list top-level docs in materials
     final QuerySnapshot semSnapshot = await db.collection('materials').get(GetOptions(source: source));
-    print('DEBUG: materials collection docs count = ${semSnapshot.docs.length}');
-    print('DEBUG: detected semester keys = ${semSnapshot.docs.map((d) => d.id).toList()}');
+    if (kDebugMode) debugPrint('DEBUG: materials collection docs count = ${semSnapshot.docs.length}');
+    if (kDebugMode) debugPrint('DEBUG: detected semester keys = ${semSnapshot.docs.map((d) => d.id).toList()}');
     
     if (semSnapshot.docs.isEmpty) {
-      print(isOffline
+      if (kDebugMode) debugPrint(isOffline
           ? '⚠️ No cached materials found (offline).'
           : '⚠️ No materials found in Firestore.');
     }
@@ -104,7 +105,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
         final Query resourcesQuery = db.collection('materials').doc(semId).collection('resources');
         final QuerySnapshot resourcesSnapshot = await resourcesQuery.get(GetOptions(source: source));
 
-        print('DEBUG: -> sem="$semId", resources count=${resourcesSnapshot.docs.length}');
+        if (kDebugMode) debugPrint('DEBUG: -> sem="$semId", resources count=${resourcesSnapshot.docs.length}');
 
         final Map<String, dynamic> resourcesMap = {};
         int printed = 0;
@@ -114,8 +115,8 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
 
           // Debug print sample docs - show the subject-based doc IDs
           if (printed < sampleLimit) {
-            print('DEBUG:    resource doc id = "${doc.id}" (subject-based ID from CSV)');
-            print('DEBUG:    fields: ${docData.keys.toList()}');
+            if (kDebugMode) debugPrint('DEBUG:    resource doc id = "${doc.id}" (subject-based ID from CSV)');
+            if (kDebugMode) debugPrint('DEBUG:    fields: ${docData.keys.toList()}');
             
             // Print a readable preview of the document
             final preview = <String, dynamic>{};
@@ -131,7 +132,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
                 }
               }
             });
-            print('DEBUG:    preview: $preview');
+            if (kDebugMode) debugPrint('DEBUG:    preview: $preview');
             printed++;
           }
         }
@@ -144,7 +145,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
       final String semId = semKey;
       final Query resourcesQuery = db.collection('materials').doc(semId).collection('resources');
       final QuerySnapshot resourcesSnapshot = await resourcesQuery.get(GetOptions(source: source));
-      print('DEBUG: -> sem="$semId", resources count=${resourcesSnapshot.docs.length}');
+      if (kDebugMode) debugPrint('DEBUG: -> sem="$semId", resources count=${resourcesSnapshot.docs.length}');
 
       int printed = 0;
       final Map<String, dynamic> resourcesMap = {};
@@ -153,8 +154,8 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
         resourcesMap[doc.id] = Map<String, dynamic>.from(docData);
         
         if (printed < sampleLimit) {
-          print('DEBUG:    resource doc id = "${doc.id}" (subject-based ID from CSV)');
-          print('DEBUG:    fields: ${docData.keys.toList()}');
+          if (kDebugMode) debugPrint('DEBUG:    resource doc id = "${doc.id}" (subject-based ID from CSV)');
+          if (kDebugMode) debugPrint('DEBUG:    fields: ${docData.keys.toList()}');
           
           final preview = <String, dynamic>{};
           docData.forEach((k, v) {
@@ -168,7 +169,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
               }
             }
           });
-          print('DEBUG:    preview: $preview');
+          if (kDebugMode) debugPrint('DEBUG:    preview: $preview');
           printed++;
         }
       }
@@ -176,9 +177,9 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
     }
 
     if (materialsMap.isNotEmpty) {
-      print('✅ Materials data fetched from ${isOffline ? 'cache' : (forceServer ? 'server (forced)' : 'server/cache')}');
-      print('✅ Total semesters loaded: ${materialsMap.keys.length}');
-      print('✅ Documents per semester: ${materialsMap.map((k, v) => MapEntry(k, v.length))}');
+      if (kDebugMode) debugPrint('✅ Materials data fetched from ${isOffline ? 'cache' : (forceServer ? 'server (forced)' : 'server/cache')}');
+      if (kDebugMode) debugPrint('✅ Total semesters loaded: ${materialsMap.keys.length}');
+      if (kDebugMode) debugPrint('✅ Documents per semester: ${materialsMap.map((k, v) => MapEntry(k, v.length))}');
 
       // Update in-memory cache
       MaterialsCache.lastData = materialsMap;
@@ -189,20 +190,20 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
         final encoded = jsonEncode(materialsMap);
         await prefs.setString('materials_cache', encoded);
         await prefs.setInt('materials_cache_time', DateTime.now().millisecondsSinceEpoch);
-        print('💾 Materials cache persisted to SharedPreferences');
+        if (kDebugMode) debugPrint('💾 Materials cache persisted to SharedPreferences');
       } catch (e) {
-        print('⚠️ Failed to persist materials cache: $e');
+        if (kDebugMode) debugPrint('⚠️ Failed to persist materials cache: $e');
       }
     } else {
-      print(isOffline ? '⚠️ No cached materials available (offline).' : '⚠️ No materials found.');
+      if (kDebugMode) debugPrint(isOffline ? '⚠️ No cached materials available (offline).' : '⚠️ No materials found.');
     }
   } catch (e, st) {
-    print('❌ Error fetching Firestore materials data: $e');
-    print(st);
+    if (kDebugMode) debugPrint('❌ Error fetching Firestore materials data: $e');
+    if (kDebugMode) debugPrint(st);
 
     // fallback to in-memory cache if available
     if (MaterialsCache.lastData != null) {
-      print('⚠ Using previous in-memory materials cache.');
+      if (kDebugMode) debugPrint('⚠ Using previous in-memory materials cache.');
       if (!fetchAll && semKey != null) {
         final single = <String, Map<String, dynamic>>{};
         final entry = MaterialsCache.lastData![semKey];
@@ -221,7 +222,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
           final inner = (value as Map).map((k, v) => MapEntry(k as String, Map<String, dynamic>.from(v as Map)));
           return MapEntry(sem, inner);
         });
-        print('⚠ Using SharedPreferences materials cache as fallback.');
+        if (kDebugMode) debugPrint('⚠ Using SharedPreferences materials cache as fallback.');
         MaterialsCache.lastData = decoded;
         MaterialsCache.lastRefresh = DateTime.fromMillisecondsSinceEpoch(prefs.getInt('materials_cache_time') ?? 0);
         if (!fetchAll && semKey != null) {

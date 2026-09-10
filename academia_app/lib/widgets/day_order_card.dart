@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
@@ -70,7 +71,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
         });
       }
     } catch (e) {
-      debugPrint('❌ Error loading data: $e');
+      if (kDebugMode) debugPrint('❌ Error loading data: $e');
     }
   }
 
@@ -112,7 +113,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
           backgroundColor: _cardBackground,
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: _neonPink.withOpacity(0.5))),
+              side: BorderSide(color: _neonPink.withValues(alpha:0.5))),
           title: const Text('Day Note', 
             style: TextStyle(color: _white, fontWeight: FontWeight.bold)),
           content: TextField(
@@ -122,7 +123,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
             style: const TextStyle(color: _white),
             decoration: InputDecoration(
               hintText: "Enter reminders, room changes, or tasks...",
-              hintStyle: TextStyle(color: _white.withOpacity(0.3)),
+              hintStyle: TextStyle(color: _white.withValues(alpha:0.3)),
               filled: true,
               fillColor: _pitchBlack,
               border: OutlineInputBorder(
@@ -163,20 +164,20 @@ class _DayOrderCardState extends State<DayOrderCard> {
         color: isCurrentDay ? null : _cardBackground,
         gradient: isCurrentDay
             ? LinearGradient(
-                colors: [_neonPink.withOpacity(0.85), _neonPink.withOpacity(0.6)],
+                colors: [_neonPink.withValues(alpha:0.85), _neonPink.withValues(alpha:0.6)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : null,
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: isCurrentDay ? _white.withOpacity(0.2) : _white.withOpacity(0.08),
+          color: isCurrentDay ? _white.withValues(alpha:0.2) : _white.withValues(alpha:0.08),
           width: 1.5,
         ),
         boxShadow: [
           if (isCurrentDay)
             BoxShadow(
-              color: _neonPink.withOpacity(0.3),
+              color: _neonPink.withValues(alpha:0.3),
               blurRadius: 30,
               spreadRadius: -10,
               offset: const Offset(0, 10),
@@ -208,7 +209,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
                       children: [
                         IconButton(
                           onPressed: _showNoteDialog,
-                          icon: Icon(Icons.edit_note, color: _white.withOpacity(0.8), size: 28),
+                          icon: Icon(Icons.edit_note, color: _white.withValues(alpha:0.8), size: 28),
                         ),
                       ],
                     ),
@@ -225,9 +226,9 @@ class _DayOrderCardState extends State<DayOrderCard> {
                       margin: const EdgeInsets.only(top: 10),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _white.withOpacity(isCurrentDay ? 0.15 : 0.05),
+                        color: _white.withValues(alpha:isCurrentDay ? 0.15 : 0.05),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: _white.withOpacity(0.1)),
+                        border: Border.all(color: _white.withValues(alpha:0.1)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +242,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  color: _white.withOpacity(0.6),
+                                  color: _white.withValues(alpha:0.6),
                                   letterSpacing: 1,
                                 ),
                               ),
@@ -249,7 +250,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
                               Icon(
                                 _isNoteExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
                                 size: 16,
-                                color: _white.withOpacity(0.5),
+                                color: _white.withValues(alpha:0.5),
                               )
                             ],
                           ),
@@ -289,9 +290,9 @@ class _DayOrderCardState extends State<DayOrderCard> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.event_available, size: 60, color: _white.withOpacity(0.2)),
+                    Icon(Icons.event_available, size: 60, color: _white.withValues(alpha:0.2)),
                     const SizedBox(height: 12),
-                    Text("No Classes Scheduled", style: TextStyle(color: _white.withOpacity(0.4))),
+                    Text("No Classes Scheduled", style: TextStyle(color: _white.withValues(alpha:0.4))),
                   ],
                 ),
               ),
@@ -316,12 +317,12 @@ class _DayOrderCardState extends State<DayOrderCard> {
                       decoration: BoxDecoration(
                         color: isOptional 
                             ? Colors.transparent 
-                            : (isCurrentDay ? _white.withOpacity(0.1) : _pitchBlack),
+                            : (isCurrentDay ? _white.withValues(alpha:0.1) : _pitchBlack),
                         borderRadius: BorderRadius.circular(22),
                         border: Border.all(
                           color: isOptional 
-                              ? _white.withOpacity(0.05) 
-                              : (isCurrentDay ? _white.withOpacity(0.2) : _neonPink.withOpacity(0.2)),
+                              ? _white.withValues(alpha:0.05) 
+                              : (isCurrentDay ? _white.withValues(alpha:0.2) : _neonPink.withValues(alpha:0.2)),
                         ),
                       ),
                       child: Opacity(
@@ -366,13 +367,13 @@ class _DayOrderCardState extends State<DayOrderCard> {
                             const SizedBox(height: 10),
                             Row(
                               children: [
-                                Icon(Icons.room_outlined, size: 16, color: _neonPink.withOpacity(0.8)),
+                                Icon(Icons.room_outlined, size: 16, color: _neonPink.withValues(alpha:0.8)),
                                 const SizedBox(width: 6),
                                 Text(
                                   (classInfo['classroom']?.toString().trim().isNotEmpty ?? false)
                                       ? classInfo['classroom'].toString() 
                                       : 'N/A',
-                                  style: TextStyle(fontSize: 14, color: _white.withOpacity(0.6)),
+                                  style: TextStyle(fontSize: 14, color: _white.withValues(alpha:0.6)),
                                 ),
                               ],
                             ),

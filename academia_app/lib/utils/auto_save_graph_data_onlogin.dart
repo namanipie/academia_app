@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,7 +38,7 @@ Future<void> saveAttendanceDataOnAppStart(String userData) async {
 
         // Save attendance trend data for ALL courses
         if (courses.isNotEmpty) {
-          print('🔄 Saving attendance for ${courses.length} courses...');
+          if (kDebugMode) debugPrint('🔄 Saving attendance for ${courses.length} courses...');
           
           final prefs = await SharedPreferences.getInstance();
           const mainKey = 'GRAPH_ATTENDANCE';
@@ -126,11 +127,11 @@ Future<void> saveAttendanceDataOnAppStart(String userData) async {
 
           // Save all data at once
           await prefs.setString(mainKey, json.encode(allGraphData));
-          print('✅ Attendance data saved for ${courses.length} courses');
+          if (kDebugMode) debugPrint('✅ Attendance data saved for ${courses.length} courses');
         }
       }
     }
   } catch (e) {
-    print('❌ Error saving attendance data: $e');
+    if (kDebugMode) debugPrint('❌ Error saving attendance data: $e');
   }
 }

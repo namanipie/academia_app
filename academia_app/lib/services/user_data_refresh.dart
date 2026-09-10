@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,7 +23,7 @@ class DataRefreshService {
       }
 
       if (email == null || password == null) {
-        print("❌ Background refresh failed: no credentials");
+        if (kDebugMode) debugPrint("❌ Background refresh failed: no credentials");
         return false;
       }
 
@@ -45,7 +46,7 @@ class DataRefreshService {
       );
 
       if (response.statusCode != 200) {
-        print("❌ Background API failed: ${response.statusCode}");
+        if (kDebugMode) debugPrint("❌ Background API failed: ${response.statusCode}");
         return false;
       }
 
@@ -59,14 +60,27 @@ class DataRefreshService {
         );
       }
 
-      // 4. Save the entire new response (which includes updated session_data)
-      await prefs.setString('userData', jsonEncode(data));
-      await prefs.setString('lastRefreshTime', DateTime.now().toIso8601String());
+      // 4. Validate data before overwriting cache
+      // The API might return 200 OK but with empty data due to SSO Captcha.
+      // We don't want to wipe the user's cached attendance and marks.
+      bool hasValidData = false;
+      if (data['attendance'] != null && data['attendance'] is Map && data['attendance'].isNotEmpty) {
+        if (data['attendance']['attendance'] != null && data['attendance']['attendance'] is Map && data['attendance']['attendance'].isNotEmpty) {
+           hasValidData = true;
+        }
+      }
 
-      print("✅ Background refresh success using nested session data");
-      return true;
+      if (hasValidData) {
+        await prefs.setString('userData', jsonEncode(data));
+        await prefs.setString('lastRefreshTime', DateTime.now().toIso8601String());
+        if (kDebugMode) debugPrint("✅ Background refresh success using nested session data");
+        return true;
+      } else {
+        if (kDebugMode) debugPrint("⚠️ Background refresh returned empty data (likely Captcha block). Retaining old cache.");
+        return false;
+      }
     } catch (e) {
-      print("❌ Background refresh error: $e");
+      if (kDebugMode) debugPrint("❌ Background refresh error: $e");
       return false;
     }
   }

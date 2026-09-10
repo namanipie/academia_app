@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,7 +25,7 @@ class MessMenuService {
         MessMenuCache.memoryTime != null &&
         now.difference(MessMenuCache.memoryTime!) <
             MessMenuCache.cacheDuration) {
-      print("⚡ Using memory cache");
+      if (kDebugMode) debugPrint("⚡ Using memory cache");
       return MessMenuCache.memoryData;
     }
 
@@ -38,7 +39,7 @@ class MessMenuService {
 
       if (now.difference(savedTime) <
           MessMenuCache.cacheDuration) {
-        print("📦 Using persistent cache");
+        if (kDebugMode) debugPrint("📦 Using persistent cache");
 
         final decoded =
             Map<String, dynamic>.from(jsonDecode(cachedJson));
@@ -52,7 +53,7 @@ class MessMenuService {
     }
 
     // 🔴 3. Fetch from Firestore ONLY if cache expired
-    print("☁ Fetching from Firestore...");
+    if (kDebugMode) debugPrint("☁ Fetching from Firestore...");
     final db = FirebaseFirestore.instance;
 
     try {
@@ -80,16 +81,16 @@ class MessMenuService {
         MessMenuCache.memoryData = data;
         MessMenuCache.memoryTime = now;
 
-        print("✅ Data saved (persistent + memory)");
+        if (kDebugMode) debugPrint("✅ Data saved (persistent + memory)");
 
         return data;
       }
     } catch (e) {
-      print("❌ Firestore fetch failed: $e");
+      if (kDebugMode) debugPrint("❌ Firestore fetch failed: $e");
 
       // 🔹 fallback to stale persistent cache
       if (cachedJson != null) {
-        print("⚠ Using stale persistent cache");
+        if (kDebugMode) debugPrint("⚠ Using stale persistent cache");
 
         return Map<String, dynamic>.from(
             jsonDecode(cachedJson));

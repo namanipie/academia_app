@@ -243,7 +243,7 @@ class _NearbyChatScreenState extends State<NearbyChatScreen> with WidgetsBinding
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (isServiceHealthy ? kSystemGreen : kWarningRed).withOpacity(0.5),
+                  color: (isServiceHealthy ? kSystemGreen : kWarningRed).withValues(alpha:0.5),
                   blurRadius: 6,
                   spreadRadius: 2,
                 )
@@ -275,7 +275,7 @@ class _NearbyChatScreenState extends State<NearbyChatScreen> with WidgetsBinding
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: kSurfaceGrey.withOpacity(0.5),
+        color: kSurfaceGrey.withValues(alpha:0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -321,7 +321,7 @@ class _NearbyChatScreenState extends State<NearbyChatScreen> with WidgetsBinding
         decoration: BoxDecoration(
           color: kCardGrey,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: kAccentBlue.withOpacity(0.1)),
+          border: Border.all(color: kAccentBlue.withValues(alpha:0.1)),
         ),
         child: Text(name.toUpperCase(), 
           style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
@@ -434,7 +434,7 @@ class _NearbyChatScreenState extends State<NearbyChatScreen> with WidgetsBinding
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.wifi_channel_rounded, size: 64, color: kAccentBlue.withOpacity(0.05)),
+          Icon(Icons.wifi_channel_rounded, size: 64, color: kAccentBlue.withValues(alpha:0.05)),
           const SizedBox(height: 16),
           const Text("SILENCE ON ALL FREQUENCIES", 
             style: TextStyle(color: kMutedText, fontWeight: FontWeight.w900, letterSpacing: 2, fontSize: 11)),
@@ -473,7 +473,7 @@ class _NearbyChatScreenState extends State<NearbyChatScreen> with WidgetsBinding
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: kWarningRed.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: kWarningRed.withValues(alpha:0.1), borderRadius: BorderRadius.circular(12)),
               child: const Row(
                 children: [
                   Icon(Icons.shield_rounded, color: kWarningRed, size: 18),

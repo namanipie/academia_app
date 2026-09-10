@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -158,7 +159,7 @@ class _CLoginPageState extends State<CLoginPage> {
         try {
           await ApiService().autoResubscribeToClubs(emailPart);
         } catch (e) {
-          print('⚠ Auto-resubscription failed: $e');
+          if (kDebugMode) debugPrint('⚠ Auto-resubscription failed: $e');
           // Continue with login even if auto-resubscription fails
         }
 

@@ -36,7 +36,7 @@ class MarksStatsWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(32),
         boxShadow: [
           BoxShadow(
-            color: _emeraldGreen.withOpacity(0.25),
+            color: _emeraldGreen.withValues(alpha:0.25),
             blurRadius: 25,
             offset: const Offset(0, 12),
           ),
@@ -56,7 +56,7 @@ class MarksStatsWidget extends StatelessWidget {
                   Text(
                     'ACADEMIC PERFORMANCE',
                     style: TextStyle(
-                      color: _white.withOpacity(0.5),
+                      color: _white.withValues(alpha:0.5),
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1.2,
@@ -80,7 +80,7 @@ class MarksStatsWidget extends StatelessWidget {
                       Text(
                         '%',
                         style: TextStyle(
-                          color: _white.withOpacity(0.4),
+                          color: _white.withValues(alpha:0.4),
                           fontSize: 22,
                           fontWeight: FontWeight.w700,
                         ),
@@ -92,7 +92,7 @@ class MarksStatsWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withValues(alpha:0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.bar_chart_rounded, color: _white, size: 22),
@@ -106,9 +106,9 @@ class MarksStatsWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 18),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.18),
+              color: Colors.black.withValues(alpha:0.18),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withOpacity(0.06)),
+              border: Border.all(color: Colors.white.withValues(alpha:0.06)),
             ),
             child: Row(
               children: [
@@ -127,7 +127,7 @@ class MarksStatsWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha:0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -139,7 +139,7 @@ class MarksStatsWidget extends StatelessWidget {
                       'Based on ${stats['totalTests']} test(s) across ${stats['totalCourses']} course(s)',
                       style: TextStyle(
                         fontSize: 11,
-                        color: const Color.fromARGB(255, 5, 5, 5).withOpacity(0.8),
+                        color: const Color.fromARGB(255, 5, 5, 5).withValues(alpha:0.8),
                       ),
                     ),
                   ),
@@ -171,11 +171,11 @@ class MarksStatsWidget extends StatelessWidget {
                 ),
               ),
               style: TextButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 195, 190, 190).withOpacity(0.1),
+                backgroundColor: const Color.fromARGB(255, 195, 190, 190).withValues(alpha:0.1),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                  side: BorderSide(color: Colors.white.withValues(alpha:0.1)),
                 ),
               ),
             ),
@@ -198,7 +198,7 @@ class MarksStatsWidget extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: _white.withOpacity(0.35),
+              color: _white.withValues(alpha:0.35),
               fontSize: 8,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.5,
@@ -210,7 +210,7 @@ class MarksStatsWidget extends StatelessWidget {
   }
 
   Widget _buildVerticalDivider() {
-    return Container(height: 18, width: 1, color: Colors.white.withOpacity(0.1));
+    return Container(height: 18, width: 1, color: Colors.white.withValues(alpha:0.1));
   }
 
   // ===========================================================================

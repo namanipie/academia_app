@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
@@ -97,7 +98,7 @@ Future<void> _initializeVideoPlayer() async {
       });
     }
   } catch (e) {
-    print('❌ Video init failed (DB/network): $e');
+    if (kDebugMode) debugPrint('❌ Video init failed (DB/network): $e');
 
     // 🔻 Let UI fallback to gradient
     if (mounted) {
@@ -111,10 +112,10 @@ Future<void> _initializeVideoPlayer() async {
 
   Future<void> _loadAnnouncements() async {
     try {
-      print('🔍 Starting to load announcements...');
+      if (kDebugMode) debugPrint('🔍 Starting to load announcements...');
       final data = await getEventsData();
-      print('📦 Received data: ${data.length} announcements');
-      print('📋 Data keys: ${data.keys.toList()}');
+      if (kDebugMode) debugPrint('📦 Received data: ${data.length} announcements');
+      if (kDebugMode) debugPrint('📋 Data keys: ${data.keys.toList()}');
       
       if (mounted) {
         setState(() {
@@ -124,12 +125,12 @@ Future<void> _initializeVideoPlayer() async {
       }
       
       if (data.isEmpty) {
-        print('⚠️ Warning: Data is empty!');
+        if (kDebugMode) debugPrint('⚠️ Warning: Data is empty!');
       } else {
-        print('✅ Successfully loaded ${data.length} announcements');
+        if (kDebugMode) debugPrint('✅ Successfully loaded ${data.length} announcements');
       }
     } catch (e) {
-      print('❌ Error loading announcements: $e');
+      if (kDebugMode) debugPrint('❌ Error loading announcements: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -150,7 +151,7 @@ Future<void> _initializeVideoPlayer() async {
           SnackBar(content: Text('Could not open the link')),
         );
       }
-      print('Could not launch $url');
+      if (kDebugMode) debugPrint('Could not launch $url');
     }
   }
 
@@ -303,8 +304,8 @@ Future<void> _initializeVideoPlayer() async {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.1),
-                      Colors.black.withOpacity(0.2),
+                      Colors.black.withValues(alpha:0.1),
+                      Colors.black.withValues(alpha:0.2),
                     ],
                   ),
                 ),
@@ -321,7 +322,7 @@ Future<void> _initializeVideoPlayer() async {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha:0.2),
                             borderRadius: BorderRadius.circular(18),
                           ),
                           child: const Icon(Icons.person, color: Colors.white, size: 32),
@@ -420,7 +421,7 @@ Widget _buildAnnouncementCard() {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha:0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -476,8 +477,8 @@ Widget _buildAnnouncementCard() {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.3),
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha:0.3),
+                      Colors.black.withValues(alpha:0.7),
                     ],
                   ),
                 ),
@@ -495,7 +496,7 @@ Widget _buildAnnouncementCard() {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha:0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(Icons.campaign, color: Colors.white, size: 24),
@@ -555,7 +556,7 @@ Widget _buildAnnouncementCard() {
                               borderRadius: BorderRadius.circular(30),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha:0.2),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),

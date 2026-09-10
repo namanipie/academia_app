@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -67,7 +68,7 @@ class _CGPACalculatorState extends State<CGPACalculator> {
         });
       }
     } catch (e) {
-      print('Error loading courses: $e');
+      if (kDebugMode) debugPrint('Error loading courses: $e');
       setState(() {
         courses = [];
         isLoading = false;

@@ -1,11 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-class NotificationService_firestore {
+class NotificationServiceFirestore {
   // Singleton pattern to access it easily
-  static final NotificationService_firestore _instance = NotificationService_firestore._internal();
-  factory NotificationService_firestore() => _instance;
-  NotificationService_firestore._internal();
+  static final NotificationServiceFirestore _instance = NotificationServiceFirestore._internal();
+  factory NotificationServiceFirestore() => _instance;
+  NotificationServiceFirestore._internal();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
 
@@ -17,15 +18,15 @@ class NotificationService_firestore {
       badge: true,
       sound: true,
     );
-    print('User permission: ${settings.authorizationStatus}');
+    if (kDebugMode) debugPrint('User permission: ${settings.authorizationStatus}');
 
     // Subscribe to topic (optional)
     await _messaging.subscribeToTopic("allUsers");
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('Foreground message received: ${message.notification?.title}');
-      print('Body: ${message.notification?.body}');
+      if (kDebugMode) debugPrint('Foreground message received: ${message.notification?.title}');
+      if (kDebugMode) debugPrint('Body: ${message.notification?.body}');
       // You can show a local notification here if needed
     });
 
@@ -36,7 +37,7 @@ class NotificationService_firestore {
 
 /// Must be a top-level function for background handling
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Background message received: ${message.messageId}');
-  print('Title: ${message.notification?.title}');
-  print('Body: ${message.notification?.body}');
+  if (kDebugMode) debugPrint('Background message received: ${message.messageId}');
+  if (kDebugMode) debugPrint('Title: ${message.notification?.title}');
+  if (kDebugMode) debugPrint('Body: ${message.notification?.body}');
 }

@@ -257,12 +257,12 @@ Widget _buildFilterBar() {
           color: isSelected ? Colors.white : const Color(0xFF121212), 
           borderRadius: BorderRadius.circular(30),
           border: Border.all(
-            color: isSelected ? Colors.white : Colors.white.withOpacity(0.1),
+            color: isSelected ? Colors.white : Colors.white.withValues(alpha:0.1),
             width: 1,
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha:0.15),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )

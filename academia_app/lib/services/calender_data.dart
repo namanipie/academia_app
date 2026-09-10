@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -18,7 +19,7 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
       CalendarCache.lastRefresh != null &&
       DateTime.now().difference(CalendarCache.lastRefresh!) <
           CalendarCache.cacheDuration) {
-    print('⚡ Using cached calendar data (no Firestore call)');
+    if (kDebugMode) debugPrint('⚡ Using cached calendar data (no Firestore call)');
     return CalendarCache.lastData!;
   }
 
@@ -30,7 +31,7 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
     final savedTime = DateTime.fromMillisecondsSinceEpoch(cachedTime);
 
     if (DateTime.now().difference(savedTime) < CalendarCache.cacheDuration) {
-      print('📦 Using SharedPreferences calendar cache');
+      if (kDebugMode) debugPrint('📦 Using SharedPreferences calendar cache');
 
       final decoded = (jsonDecode(cachedJson) as Map<String, dynamic>).map(
         (key, value) => MapEntry(key, Map<String, dynamic>.from(value)),
@@ -42,7 +43,7 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
     }
   }
 
-  print('☁ Fetching calendar data from Firestore...');
+  if (kDebugMode) debugPrint('☁ Fetching calendar data from Firestore...');
   final FirebaseFirestore db = FirebaseFirestore.instance;
   Map<String, Map<String, dynamic>> eventsData = {};
 
@@ -61,11 +62,11 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
     }
 
     if (eventsData.isEmpty) {
-      print(isOffline
+      if (kDebugMode) debugPrint(isOffline
           ? '⚠️ No cached calendar data found (offline).'
           : '⚠️ No calendar data found in Firestore.');
     } else {
-      print('✅ Calendar data fetched from ${isOffline ? 'cache' : 'server/cache'}.');
+      if (kDebugMode) debugPrint('✅ Calendar data fetched from ${isOffline ? 'cache' : 'server/cache'}.');
 
       // ✅ Cache in memory
       CalendarCache.lastData = eventsData;
@@ -76,10 +77,10 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
       await prefs.setInt('calendar_cache_time', DateTime.now().millisecondsSinceEpoch);
     }
   } catch (e) {
-    print('❌ Error fetching Firestore data: $e');
+    if (kDebugMode) debugPrint('❌ Error fetching Firestore data: $e');
 
     if (CalendarCache.lastData != null) {
-      print('⚠ Using previous cached calendar data.');
+      if (kDebugMode) debugPrint('⚠ Using previous cached calendar data.');
       return CalendarCache.lastData!;
     }
   }

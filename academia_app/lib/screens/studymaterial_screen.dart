@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -58,7 +59,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
       _subjects = _flatten(data);
       _applyFilter();
     } catch (e) {
-      debugPrint('Error: $e');
+      if (kDebugMode) debugPrint('Error: $e');
     } finally {
       setState(() => _loading = false);
     }
@@ -177,8 +178,8 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
           },
           decoration: InputDecoration(
             hintText: 'Search subjects or codes...',
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-            prefixIcon: Icon(Icons.search_rounded, color: Colors.white.withOpacity(0.3)),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha:0.3)),
+            prefixIcon: Icon(Icons.search_rounded, color: Colors.white.withValues(alpha:0.3)),
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(vertical: 15),
           ),
@@ -211,7 +212,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 4),
               padding: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: isSelected ? color.withOpacity(0.2) : const Color(0xFF121212),
+                color: isSelected ? color.withValues(alpha:0.2) : const Color(0xFF121212),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
                   color: isSelected ? color : Colors.transparent,
@@ -258,7 +259,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF121212),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 8)],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha:0.3), blurRadius: 8)],
                 ),
                 child: InkWell(
                   onTap: () => Navigator.push(context, CupertinoPageRoute(builder: (_) => SubjectMaterialsScreen(entry: s))),
@@ -273,7 +274,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(5)),
+                              decoration: BoxDecoration(color: color.withValues(alpha:0.1), borderRadius: BorderRadius.circular(5)),
                               child: Text(s.sem.toUpperCase(), style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold)),
                             ),
                             GestureDetector(
@@ -340,7 +341,7 @@ class _MaterialsScreenState extends State<MaterialsScreen> {
                 children: [
                   Container(
                     height: 45, width: 45,
-                    decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: color.withValues(alpha:0.1), borderRadius: BorderRadius.circular(12)),
                     child: Icon(Icons.book_rounded, color: color, size: 22),
                   ),
                   const SizedBox(width: 15),

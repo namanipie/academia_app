@@ -41,7 +41,7 @@ class StatsBar extends StatelessWidget {
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.4),
+              color: Colors.black.withValues(alpha:0.4),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -82,7 +82,7 @@ class StatsBar extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: Colors.white.withOpacity(0.4),
+              color: Colors.white.withValues(alpha:0.4),
               letterSpacing: 0.5,
             ),
           ),
@@ -93,7 +93,7 @@ class StatsBar extends StatelessWidget {
 
   Widget _buildDivider() {
     return VerticalDivider(
-      color: Colors.white.withOpacity(0.1),
+      color: Colors.white.withValues(alpha:0.1),
       thickness: 1,
       indent: 5,
       endIndent: 5,

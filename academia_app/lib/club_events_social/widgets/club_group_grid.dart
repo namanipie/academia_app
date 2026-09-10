@@ -47,11 +47,11 @@ class _ClubGroupGridState extends State<ClubGroupGrid> {
               contentPadding: const EdgeInsets.symmetric(vertical: 0),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha:0.08)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha:0.08)),
               ),
             ),
           ),
@@ -275,8 +275,8 @@ Widget build(BuildContext context) {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withOpacity(0.3),
-                    Colors.black.withOpacity(0.8),
+                    Colors.black.withValues(alpha:0.3),
+                    Colors.black.withValues(alpha:0.8),
                   ],
                 ),
               ),
@@ -288,7 +288,7 @@ Widget build(BuildContext context) {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.08),
+                color: Colors.white.withValues(alpha:0.08),
                 width: 1,
               ),
             ),
@@ -335,10 +335,10 @@ Widget build(BuildContext context) {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.amber.withOpacity(0.3),
+                    color: Colors.amber.withValues(alpha:0.3),
                     width: 0.5,
                   ),
                 ),
@@ -408,7 +408,7 @@ Widget build(BuildContext context) {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: _isSubscribed 
-                ? BorderSide(color: Colors.white.withOpacity(0.3), width: 1)
+                ? BorderSide(color: Colors.white.withValues(alpha:0.3), width: 1)
                 : BorderSide.none,
           ),
           padding: EdgeInsets.zero,

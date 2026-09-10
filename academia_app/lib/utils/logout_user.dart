@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -18,7 +19,7 @@ Future<void> logoutAction(BuildContext context) async {
       final Map<String, dynamic> fullData = jsonDecode(userDataString);
       sessionData = fullData['session_data'];
     } catch (e) {
-      print("Error parsing session data for logout: $e");
+      if (kDebugMode) debugPrint("Error parsing session data for logout: $e");
     }
   }
 
@@ -42,9 +43,9 @@ Future<void> logoutAction(BuildContext context) async {
         }),
       ).timeout(const Duration(seconds: 3)); // Don't let a slow API hang the logout UI
       
-      print("✅ API Logout successful");
+      if (kDebugMode) debugPrint("✅ API Logout successful");
     } catch (e) {
-      print("⚠️ API Logout failed (likely already expired): $e");
+      if (kDebugMode) debugPrint("⚠️ API Logout failed (likely already expired): $e");
     }
   }
 

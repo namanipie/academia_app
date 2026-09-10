@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +22,7 @@ Future<String?> getProfileCardVideoUrl() async {
       VideoCache.memoryTime != null &&
       now.difference(VideoCache.memoryTime!) <
           VideoCache.cacheDuration) {
-    print("⚡ Using memory cache");
+    if (kDebugMode) debugPrint("⚡ Using memory cache");
     return VideoCache.memoryUrl;
   }
 
@@ -35,7 +36,7 @@ Future<String?> getProfileCardVideoUrl() async {
 
     if (now.difference(savedTime) <
         VideoCache.cacheDuration) {
-      print("📦 Using persistent cache");
+      if (kDebugMode) debugPrint("📦 Using persistent cache");
 
       // update memory cache
       VideoCache.memoryUrl = cachedUrl;
@@ -46,7 +47,7 @@ Future<String?> getProfileCardVideoUrl() async {
   }
 
   // 🔴 3. Fetch from Firestore ONLY if needed
-  print("☁ Fetching from Firestore...");
+  if (kDebugMode) debugPrint("☁ Fetching from Firestore...");
   final db = FirebaseFirestore.instance;
 
   try {
@@ -69,19 +70,19 @@ Future<String?> getProfileCardVideoUrl() async {
         VideoCache.memoryUrl = url;
         VideoCache.memoryTime = now;
 
-        print("✅ Video URL saved (persistent + memory)");
+        if (kDebugMode) debugPrint("✅ Video URL saved (persistent + memory)");
         return url;
       }
     }
 
-    print("⚠ No valid video URL found");
+    if (kDebugMode) debugPrint("⚠ No valid video URL found");
 
   } catch (e) {
-    print("❌ Firestore fetch failed: $e");
+    if (kDebugMode) debugPrint("❌ Firestore fetch failed: $e");
 
     // 🔹 fallback to stale cache
     if (cachedUrl != null) {
-      print("⚠ Using stale cached URL");
+      if (kDebugMode) debugPrint("⚠ Using stale cached URL");
       return cachedUrl;
     }
   }

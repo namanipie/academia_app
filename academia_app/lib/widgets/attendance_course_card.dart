@@ -1,13 +1,20 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../widgets/attendance_trend_widget.dart'; // Ensure this path is correct
 
 class CourseAttendanceCard extends StatelessWidget {
   final Map<String, dynamic> course;
+  final VoidCallback? onTapSimulate;
 
-  const CourseAttendanceCard({super.key, required this.course});
+  const CourseAttendanceCard({
+    super.key,
+    required this.course,
+    this.onTapSimulate,
+  });
 
   // --- REFINED THEME PALETTE ---
-  static const Color _surface = Color.fromARGB(255, 20, 20, 24);
+  static const Color _surface = Color.fromARGB(150, 20, 20, 24);
   static const Color _accentBlue = Color(0xFF4A90E2);
   static const Color _skyBlue = Color(0xFF64B5F6);
   static const Color _warningAmber = Color.fromARGB(255, 255, 250, 242);
@@ -54,10 +61,10 @@ return Container(
   decoration: BoxDecoration(
     color: _surface,
     borderRadius: BorderRadius.circular(24),
-    border: Border.all(color: _white.withOpacity(0.05), width: 1),
+    border: Border.all(color: _white.withValues(alpha:0.08), width: 1),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.2),
+        color: Colors.black.withValues(alpha:0.2),
         blurRadius: 15,
         offset: const Offset(0, 8),
       ),
@@ -66,7 +73,6 @@ return Container(
   child: Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-
       // Padded content
       Padding(
         padding: const EdgeInsets.all(20),
@@ -130,22 +136,21 @@ return Container(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
              Text(
-              (course['title'].length > 22)
-                  ? course['title'].substring(0, 22) + '...'
-                  : course['title'],
+              course['title']?.toString() ?? 'Unknown Course',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: _white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
               ),
-            )
-,
+            ),
               const SizedBox(height: 2),
               Text(
-                course['category'].toString().toUpperCase(),
+                (course['category']?.toString() ?? '').toUpperCase(),
                 style: TextStyle(
-                  color: _white.withOpacity(0.4),
+                  color: _white.withValues(alpha:0.4),
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.1,
@@ -158,7 +163,7 @@ return Container(
         Text(
           '${percentage.toStringAsFixed(1)}%',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha:0.9),
             fontWeight: FontWeight.w900,
             fontSize: 22,
           ),
@@ -174,14 +179,14 @@ return Container(
       child: Container(
         height: 10,
         width: double.infinity,
-        color: _white.withOpacity(0.05),
+        color: _white.withValues(alpha:0.05),
         child: FractionallySizedBox(
           alignment: Alignment.centerLeft,
           widthFactor: (percentage / 100).clamp(0.0, 1.0),
           child: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [statusColor.withAlpha(255), statusColor.withOpacity(0.7)],
+                colors: [statusColor.withAlpha(255), statusColor.withValues(alpha:0.7)],
               ),
             ),
           ),
@@ -196,7 +201,7 @@ return Container(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildStatItem('Present', attended.toString(), _skyBlue),
-        _buildStatItem('Absent', absent.toString(), _errorRed.withOpacity(0.8)),
+        _buildStatItem('Absent', absent.toString(), _errorRed.withValues(alpha:0.8)),
         _buildStatItem('Total', conducted.toString(), _textSecondary),
       ],
     );
@@ -210,7 +215,7 @@ return Container(
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            color: _textSecondary.withOpacity(0.5),
+            color: _textSecondary.withValues(alpha:0.5),
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
@@ -231,29 +236,79 @@ return Container(
 
   // --- INSIGHT BANNER WIDGET ---
   Widget _buildInsightBanner(Color color, IconData icon, String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(
-                color: color,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
+    final content = Row(
+      children: [
+        Icon(icon, color: color, size: 18),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        if (onTapSimulate != null) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha:0.15),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'SIMULATE',
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(Icons.arrow_forward_ios_rounded, size: 9, color: color),
+              ],
             ),
           ),
         ],
+      ],
+    );
+
+    if (onTapSimulate != null) {
+      return Material(
+        color: Colors.transparent,
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha:0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha:0.15)),
+          ),
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onTapSimulate!();
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: content,
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha:0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha:0.15)),
       ),
+      child: content,
     );
   }
 }

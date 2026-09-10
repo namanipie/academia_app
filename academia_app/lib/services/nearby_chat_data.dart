@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:convert';
@@ -79,9 +80,9 @@ class NearbyChatService {
         },
       );
       _isAdvertising = true;
-      print("Advertising started.");
+      if (kDebugMode) debugPrint("Advertising started.");
     } catch (e) {
-      print("Advertising Error: $e");
+      if (kDebugMode) debugPrint("Advertising Error: $e");
       _isAdvertising = false;
       _scheduleReconnect();
     }
@@ -111,9 +112,9 @@ class NearbyChatService {
         },
       );
       _isDiscovering = true;
-      print("Discovery started.");
+      if (kDebugMode) debugPrint("Discovery started.");
     } catch (e) {
-      print("Discovery Error: $e");
+      if (kDebugMode) debugPrint("Discovery Error: $e");
       _isDiscovering = false;
       _scheduleReconnect();
     }
@@ -160,7 +161,7 @@ class NearbyChatService {
       lastHeartbeat[endpointId] = DateTime.now();
       _messages.add(displayMsg);
     } catch (e) {
-      print("Error decoding payload: $e");
+      if (kDebugMode) debugPrint("Error decoding payload: $e");
     }
   }
 
@@ -187,7 +188,7 @@ class NearbyChatService {
       // 4. Update local UI
       _messages.add(chatMsg);
     } catch (e) {
-      print("Error sending message: $e");
+      if (kDebugMode) debugPrint("Error sending message: $e");
     }
   }
 

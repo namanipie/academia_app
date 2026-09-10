@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
@@ -40,7 +41,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
           SnackBar(content: Text('Could not open the link')),
         );
       }
-      print('Could not launch $url');
+      if (kDebugMode) debugPrint('Could not launch $url');
     }
   }
 
@@ -83,7 +84,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
         return timeB.compareTo(timeA);
       } catch (e) {
         // ignore: avoid_print
-        print('Error parsing date for sorting: $e');
+        if (kDebugMode) debugPrint('Error parsing date for sorting: $e');
         return 0;
       }
     });
