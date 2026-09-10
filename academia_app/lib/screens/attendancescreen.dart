@@ -18,6 +18,7 @@ class AttendanceScreen extends StatefulWidget {
   State<AttendanceScreen> createState() => _AttendanceScreenState();
 }
 
+Map<String, dynamic> _decodeJson(String source) => json.decode(source) as Map<String, dynamic>;
 class _AttendanceScreenState extends State<AttendanceScreen> {
   // Theme Colors
   static const Color _bgBlack = Color(0xFF0A0A0A);
@@ -54,7 +55,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString('userData');
       if (raw != null && raw.isNotEmpty) {
-        final Map<String, dynamic> data = json.decode(raw);
+        final Map<String, dynamic> data = await compute(_decodeJson, raw);
         final overall = data['attendance']?['attendance'];
         if (overall != null) {
           setState(() {

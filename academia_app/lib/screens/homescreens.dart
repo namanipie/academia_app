@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 import '../components/subject_info.dart';
 import '../components/faculty_info.dart';
 //user_data_refresh service
@@ -21,6 +22,7 @@ import '../components/contact_us.dart';
 import '../services/theme_controller.dart';
 import '../widgets/next_class_widget.dart';
 import 'settings_screen.dart';
+import 'package:flutter/cupertino.dart';
 
 // ============================================================================
 // HOME SCREEN - Student profile and overview
@@ -34,9 +36,12 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+Map<String, dynamic> _decodeJson(String source) => jsonDecode(source) as Map<String, dynamic>;
+
 class _HomeScreenState extends State<HomeScreen> {
   Color get _primaryColor => ThemeController.instance.primaryAccent;
 
+  bool _isGuest = false;
   Map<String, dynamic>? studentInfo;
   double _overallAttendance = 0.0;
   int _courseCount = 0;
@@ -55,6 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadAndAutoRefresh() async {
     await _loadUserData(); // Showing cached data first
     
+    if (_isGuest) return;
+
     final prefs = await SharedPreferences.getInstance();
     final lastRefreshTime = prefs.getString('lastRefreshTime');
 
@@ -129,6 +136,16 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
   Future<void> _refreshData() async {
+    if (_isGuest) {
+      if (mounted) {
+         Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const CLoginPage()),
+         );
+      }
+      return;
+    }
+
     try {
       // CALL REFRESH SERVICE
       final success = await DataRefreshService.refreshData();
@@ -170,6 +187,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadUserData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      final email = prefs.getString('userEmail');
+      _isGuest = email == null || email.isEmpty;
+
       final dataString = prefs.getString('userData');
       final lastRefreshTime = prefs.getString('lastRefreshTime');
       
@@ -179,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       
       if (dataString != null && dataString.isNotEmpty) {
-        final parsedData = jsonDecode(dataString);
+        final parsedData = await compute(_decodeJson, dataString);
 
         // Load student info
         try {
@@ -313,11 +334,11 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
 
-        final displayName = studentInfo?['name']?.toString() ?? 'No data found';
-        final regno = studentInfo?['registration_number']?.toString() ?? 'No data found';
-        final program = studentInfo?['program']?.toString() ?? 'No data found';
-        final specialization = studentInfo?['specialization']?.toString() ?? 'No data found';
-        final semester = studentInfo?['semester']?.toString() ?? 'No data found';
+        final displayName = _isGuest ? 'Guest User' : (studentInfo?['name']?.toString() ?? 'No data found');
+        final regno = _isGuest ? 'Not Logged In' : (studentInfo?['registration_number']?.toString() ?? 'No data found');
+        final program = _isGuest ? 'Guest' : (studentInfo?['program']?.toString() ?? 'No data found');
+        final specialization = _isGuest ? 'Mode' : (studentInfo?['specialization']?.toString() ?? 'No data found');
+        final semester = _isGuest ? '-' : (studentInfo?['semester']?.toString() ?? 'No data found');
 
         return Scaffold(
           backgroundColor: theme.scaffoldBg,
@@ -405,6 +426,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           // The new Next Class / Day Order Widget
                           const NextClassWidget(),
 
+                          // Re-sync banner when backend is CAPTCHA-blocked
+                          if (false)
+                            _buildResyncBanner(theme),
+
                           StatsBar(
                             overallAttendance: _overallAttendance,
                             courseCount: _courseCount,
@@ -461,4 +486,67 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
+  Widget _buildResyncBanner(ThemeController theme) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GestureDetector(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          decoration: BoxDecoration(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.sync_problem_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Session expired',
+                      style: TextStyle(
+                        color: theme.textPrimary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Tap to re-sync with SRM Portal',
+                      style: TextStyle(
+                        color: theme.textSecondary.withValues(alpha: 0.7),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: theme.textSecondary.withValues(alpha: 0.4),
+                size: 14,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+  }
 }

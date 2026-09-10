@@ -5,9 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 // ============================================================================
 // AUTO-SAVE ATTENDANCE HELPER FUNCTION
 // ============================================================================
+Map<String, dynamic> _decodeJson(String source) => json.decode(source) as Map<String, dynamic>;
+
 Future<void> saveAttendanceDataOnAppStart(String userData) async {
   try {
-    final Map<String, dynamic> data = json.decode(userData);
+    final Map<String, dynamic> data = await compute(_decodeJson, userData);
     final attendanceRoot = data['attendance'];
     
     if (attendanceRoot != null) {
