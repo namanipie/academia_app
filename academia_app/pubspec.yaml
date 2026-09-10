@@ -93,6 +93,7 @@ dependencies:
   share_plus: ^13.3.0
   path_provider: ^2.1.6
   html: ^0.15.7
+  workmanager: ^0.10.10
 dev_dependencies:
   flutter_test:
     sdk: flutter

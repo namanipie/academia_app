@@ -14,6 +14,22 @@ import 'package:academia_app/utils/auto_save_graph_data_onlogin.dart';
 import 'package:academia_app/services/theme_controller.dart';
 import 'dart:async';
 
+import 'package:workmanager/workmanager.dart';
+import 'package:academia_app/services/user_data_refresh.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      final success = await DataRefreshService.refreshData();
+      return success;
+    } catch (err) {
+      if (kDebugMode) debugPrint(err.toString());
+      return false;
+    }
+  });
+}
+
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -27,6 +43,9 @@ void main() async {
 
   // Initialize notifications early (lightweight)
   await NotificationService.init();
+
+  Workmanager().initialize(callbackDispatcher, isInDebugMode: false);
+  Workmanager().registerPeriodicTask('1', 'backgroundRefresh', frequency: const Duration(hours: 6));
 
   // Load user data async but don't block app start
   final prefs = await SharedPreferences.getInstance();
