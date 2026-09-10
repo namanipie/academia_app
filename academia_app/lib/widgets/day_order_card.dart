@@ -134,7 +134,7 @@ class _DayOrderCardState extends State<DayOrderCard> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text('Cancel', style: TextStyle(color: _white.withValues(alpha:0.7))),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -145,12 +145,12 @@ class _DayOrderCardState extends State<DayOrderCard> {
                 _saveNote(controller.text);
                 Navigator.pop(context);
               },
-              child: const Text('Save', style: TextStyle(color: _white, fontWeight: FontWeight.bold)),
+              child: const Text('Save', style: TextStyle(color: _white)),
             ),
           ],
         ),
       ),
-    );
+    ).then((_) => controller.dispose());
   }
 
   @override

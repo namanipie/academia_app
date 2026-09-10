@@ -263,7 +263,13 @@ class CourseDetailScreen extends StatelessWidget {
           child: Text(code, style: const TextStyle(color: kAccentOrange, fontWeight: FontWeight.bold, fontSize: 11)),
         ),
         const SizedBox(height: 12),
-        Text(title, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+        Hero(
+          tag: 'course_title_$code',
+          child: Material(
+            type: MaterialType.transparency,
+            child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: -0.5)),
+          ),
+        ),
       ],
     );
   }

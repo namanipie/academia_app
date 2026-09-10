@@ -22,7 +22,6 @@ class _AttendancePredictorState extends State<AttendancePredictor> {
   static const Color _navyBlue = Color(0xFF2C5F9E);
   static const Color _lightNavy = Color(0xFF4A7DC4);
   static const Color _skyBlue = Color(0xFF64B5F6);
-  static const Color _deepBlue = Color(0xFF1565C0);
   static const Color _paleBlue = Color(0xFF90CAF9);
   static const Color _pitchBlack = Color(0xFF000000);
   static const Color _white = Colors.white;
@@ -271,7 +270,7 @@ Map<String, int> _countClassesPerCourse(List<int> dayOrders) {
         if (title.isEmpty) continue;
         
         // Check if this class is marked as optional and skip if it is
-        final classId = "${dayOrder}_${scheduledSlot}";
+        final classId = "${dayOrder}_$scheduledSlot";
         if (_optionalClassIds.contains(classId)) {
           continue; // Skip optional classes from prediction
         }
@@ -687,17 +686,12 @@ void _calculatePredictions() {
     final Color dropColor = percentageDrop > 0 ? Colors.redAccent : _paleBlue; 
     
 // GET CURRENT AND PREDICTED VALUES
-final int currentConducted = prediction['currentConducted'] ?? 0;
 final int predictedConducted = prediction['predictedConducted'] ?? 0;
-final double currentPercentage = prediction['currentPercentage'] ?? 0.0;
 final double predictedPercentage = prediction['predictedPercentage'] ?? 0.0;
-final int classesToAttend = prediction['classesToAttend'] ?? 0;
 final int additionalClasses = prediction['additionalClasses'] ?? 0;
 
 // CALCULATE CURRENT ATTENDED (present)
-final int currentAbsent = prediction['currentAbsent'] ?? 0;
 final int currentAttended = prediction['currentAttended'] ?? 0;
-final int predictedAbsent = prediction['predictedAbsent'] ?? 0;
 
 // CALCULATE PREDICTED ATTENDED (same as current since no attendance during leave)
 final int predictedAttended = currentAttended;

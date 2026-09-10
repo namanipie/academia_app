@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../services/student_portal_data.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 // --- Aesthetic Constants ---
@@ -19,8 +19,6 @@ class MainPortalPage extends StatefulWidget {
 }
 
 class _MainPortalPageState extends State<MainPortalPage> {
-  final _netIdController = TextEditingController();
-  final _passwordController = TextEditingController();
   Map<String, dynamic>? _studentData;
   bool _isLoading = true;
 
@@ -29,8 +27,6 @@ class _MainPortalPageState extends State<MainPortalPage> {
     super.initState();
     _checkLocalStorage();
   }
-// To toggle password visibility
-  bool _showPassword = false;
 
   // --- Logic Blocks ---
 
@@ -44,35 +40,10 @@ class _MainPortalPageState extends State<MainPortalPage> {
     }
   }
 
-  void _handleLogin() async {
-    HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
-    final result = await student_portal_Service.fetchStudentPortalResult(
-      _netIdController.text.trim(),
-      _passwordController.text.trim(),
-    );
-
-    if (mounted) {
-      if (result['success']) {
-        setState(() {
-          _studentData = result['data'];
-          _isLoading = false;
-        });
-      } else {
-        setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(backgroundColor: Colors.redAccent, content: Text(result['error'] ?? "Login Failed")),
-        );
-      }
-    }
-  }
-
   void _handleLogout() async {
     await student_portal_Service.clearResult();
     setState(() {
       _studentData = null;
-      _netIdController.clear();
-      _passwordController.clear();
     });
   }
 
@@ -162,34 +133,52 @@ class _MainPortalPageState extends State<MainPortalPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("STUDENT PORTAL \n LOGIN", style: TextStyle(color: kAccentNeon, fontWeight: FontWeight.w900, fontSize: 32)),
-            const SizedBox(height: 48),
-            _buildField(
-              "NETID",
-              _netIdController,
-              Icons.person,
+            const Text(
+              "STUDENT\nPORTAL", 
+              style: TextStyle(color: kAccentNeon, fontWeight: FontWeight.w900, fontSize: 32)
+            ),
+            const SizedBox(height: 24),
+            Text(
+              "In-app syncing is temporarily unavailable due to SRM's new CAPTCHA security.",
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 16, height: 1.5),
             ),
             const SizedBox(height: 16),
-            _buildField(
-              "PASSWORD",
-              _passwordController,
-              Icons.lock,
-              isObscure: !_showPassword,
-              onToggle: () {
-                setState(() {
-                  _showPassword = !_showPassword;
-                });
-              },
+            Text(
+              "You can still view your results by opening the official SRM portal directly.",
+              style: TextStyle(color: kMutedText, fontSize: 14, height: 1.5),
             ),
-
-            const SizedBox(height: 32),
+            const SizedBox(height: 48),
             SizedBox(
               width: double.infinity,
               height: 56,
-              child: ElevatedButton(
-                onPressed: _handleLogin,
-                style: ElevatedButton.styleFrom(backgroundColor: kAccentNeon, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                child: const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.w900)),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  final url = Uri.parse('https://sp.srmist.edu.in/srmiststudentportal/');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+                icon: const Icon(Icons.open_in_browser_rounded),
+                label: const Text("OPEN OFFICIAL PORTAL", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kAccentNeon, 
+                  foregroundColor: Colors.black, 
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: OutlinedButton(
+                onPressed: () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: kMutedText),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                ),
+                child: const Text("GO BACK", style: TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -252,7 +241,7 @@ class _MainPortalPageState extends State<MainPortalPage> {
                 }).toList(),
               ),
             );
-          }).toList(),
+          }),
           const SizedBox(height: 40),
 
            const Padding(
@@ -564,40 +553,5 @@ Widget _buildCleanRow(String label, String value) {
       ]),
     );
   }
-
-Widget _buildField(
-  String hint,
-  TextEditingController ctrl,
-  IconData icon, {
-  bool isObscure = false,
-  VoidCallback? onToggle,
-}) {
-  return TextField(
-    controller: ctrl,
-    obscureText: isObscure,
-    style: const TextStyle(color: Colors.white),
-    decoration: InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: kMutedText, fontSize: 12),
-      prefixIcon: Icon(icon, color: kMutedText, size: 20),
-      suffixIcon: onToggle == null
-          ? null
-          : IconButton(
-              icon: Icon(
-                isObscure ? Icons.visibility_off : Icons.visibility,
-                color: kMutedText,
-                size: 20,
-              ),
-              onPressed: onToggle,
-            ),
-      filled: true,
-      fillColor: kCardBlack,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
-      ),
-    ),
-  );
-}
 
 }

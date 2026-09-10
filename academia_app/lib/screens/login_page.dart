@@ -1,13 +1,15 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
 
 // Assuming these paths remain the same in your project
 import '../utils/responsive_helper.dart';
-import '../utils/day_order_backup.dart'; 
+import '../services/srm_native_client.dart';
+import '../utils/day_order_backup.dart';
 import 'package:academia_app/screens/dasboardscreen.dart';
 import '../club_events_social/services/club_main_service.dart';
 
@@ -88,7 +90,10 @@ class _CLoginPageState extends State<CLoginPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text('Try Again', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Try Again',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               SizedBox(height: res.height(2)),
@@ -110,34 +115,23 @@ class _CLoginPageState extends State<CLoginPage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse('https://academia-scrapper-api-fast.onrender.com/scrape');
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    final body = jsonEncode({
-      "email": email,
-      "password": password,
-    });
-
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-        },
-        body: body,
-      );
+      final client = SrmNativeClient();
+      final loggedIn = await client.login(email, password);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      if (loggedIn) {
+        final data = await client.fetchAllData();
         final prefs = await SharedPreferences.getInstance();
 
         await prefs.setString('userEmail', email);
         await prefs.setString('userPassword', password);
 
         int? dayOrder;
-        if (data['attendance'] != null && data['attendance']['day_order'] != null) {
+        if (data['attendance'] != null &&
+            data['attendance']['day_order'] != null) {
           dayOrder = data['attendance']['day_order'] as int;
           await DayOrderManager.saveDayOrderData(
             currentDayOrder: dayOrder,
@@ -152,7 +146,16 @@ class _CLoginPageState extends State<CLoginPage> {
         }
 
         await prefs.setString('userData', jsonEncode(data));
-        await prefs.setString('lastRefreshTime', DateTime.now().toIso8601String());
+        await prefs.setString(
+          'lastRefreshTime',
+          DateTime.now().toIso8601String(),
+        );
+        if (data['marks'] != null) {
+          await prefs.setString(
+            'student_portal_result',
+            jsonEncode(data['marks']),
+          );
+        }
 
         // Extract email part before @ and auto-resubscribe to clubs
         final emailPart = email.split('@')[0];
@@ -170,17 +173,12 @@ class _CLoginPageState extends State<CLoginPage> {
           );
         }
       } else {
-        // Try to parse error message from server if it exists
-        String errorMessage = 'Status Code: ${response.statusCode}';
-        try {
-          final errorData = jsonDecode(response.body);
-          errorMessage = errorData['detail'] ?? errorData['message'] ?? errorMessage;
-        } catch (_) {}
-        
-        _showErrorBottomSheet(errorMessage);
+        _showErrorBottomSheet(
+          "Login failed. Check your credentials or SRM is down.",
+        );
       }
     } catch (e) {
-      _showErrorBottomSheet('Unable to connect to the server. Check your internet connection.');
+      _showErrorBottomSheet("Network error: $e");
     } finally {
       if (mounted) {
         setState(() {
@@ -272,7 +270,9 @@ class _CLoginPageState extends State<CLoginPage> {
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+                      MaterialPageRoute(
+                        builder: (_) => const DashboardScreen(),
+                      ),
                     );
                   },
                   child: Text(
@@ -310,7 +310,10 @@ class _CLoginPageState extends State<CLoginPage> {
         controller: controller,
         obscureText: isPassword && obscureText,
         keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+        style: const TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w500,
+        ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[400]),
@@ -318,7 +321,9 @@ class _CLoginPageState extends State<CLoginPage> {
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    obscureText
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     color: Colors.grey[600],
                   ),
                   onPressed: onTogglePassword,

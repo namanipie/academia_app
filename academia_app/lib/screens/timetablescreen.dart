@@ -5,6 +5,8 @@ import '../services/timetable_service.dart';
 import '../widgets/day_order_card.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/timetable_export_widget.dart';
+import '../services/export_service.dart';
 
 // ============================================================================
 // TIMETABLE SCREEN - Fixed Initialization while maintaining all features
@@ -35,12 +37,54 @@ class _TimetableScreenState extends State<TimetableScreen> {
   String _holidayName = '';
   int _activePageIndex = 0;
 
+  final GlobalKey _exportKey = GlobalKey();
+  String _program = '';
+  String _semester = '';
+
   @override
   void initState() {
     super.initState();
-    // FIX: Initialize immediately with page 0 to avoid "LateInitializationError"
     _pageController = PageController(initialPage: 0);
     _loadTimetable();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    final dataString = prefs.getString('userData');
+    if (dataString != null && dataString.isNotEmpty) {
+      try {
+        final parsedData = json.decode(dataString);
+        final att = parsedData['attendance'];
+        final tt = parsedData['timetable'];
+
+        Map<String, dynamic>? studentInfo;
+        if (att != null && att is Map && att['student_info'] != null) {
+          studentInfo = att['student_info'];
+        } else if (tt != null && tt is Map && tt['student_info'] != null) {
+          studentInfo = tt['student_info'];
+        }
+
+        if (studentInfo != null) {
+          final program = studentInfo['program']?.toString() ?? '';
+          final semester = studentInfo['semester']?.toString() ?? '';
+          if (mounted) {
+            setState(() {
+              _program = program;
+              _semester = semester;
+            });
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  void _exportTimetable() async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Generating timetable image...', style: TextStyle(color: Colors.white)), duration: Duration(seconds: 1)),
+    );
+    await ExportService.exportAndShare(_exportKey, context);
   }
 
   @override
@@ -68,10 +112,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
         targetDay = currentDay;
       }
 
-      // Update the active index state
       _activePageIndex = targetDay - 1;
 
-      // FIX: Use jumpToPage after the first frame is drawn to sync with data
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_pageController.hasClients) {
           _pageController.jumpToPage(_activePageIndex);
@@ -98,18 +140,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
         final todayKey = "${today.day}_${today.month}_${today.year}";
 
         if (calendarData.containsKey(todayKey)) {
-          final events = calendarData[todayKey]?['event'] as List?;
-          if (events != null) {
-            for (var event in events) {
-              if (event is Map && event['type'] == 'holiday') {
-                if (mounted) {
-                  setState(() {
-                    _isTodayHoliday = true;
-                    _holidayName = event['name'] ?? 'Holiday';
-                  });
-                }
-                break;
-              }
+          final event = calendarData[todayKey];
+          if (event != null && event['event_type'] == 'holiday') {
+            if (mounted) {
+              setState(() {
+                _isTodayHoliday = true;
+                _holidayName = event['title'] ?? 'Holiday';
+              });
             }
           }
         }
@@ -119,20 +156,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
     }
   }
 
-  // PRESERVED: Original Holiday Banner UI
   Widget _buildHolidayBanner() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      margin: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _holidayOrange.withValues(alpha:0.9),
-            _holidayGold.withValues(alpha:0.8),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: _holidayOrange,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _holidayGold, width: 2),
         boxShadow: [
@@ -203,7 +233,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
     );
   }
 
-  // PRESERVED: Original "No Data" UI Handler
   Widget _buildNoDataView() {
     return Center(
       child: Column(
@@ -214,22 +243,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
             size: 80,
             color: _neonPink.withValues(alpha:0.3),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           const Text(
-            'No timetable found',
+            'No Timetable Data',
             style: TextStyle(
+              color: _white,
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: _white,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'We couldn\'t load any class schedules.\nPlease try again later.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: _white.withValues(alpha:0.5),
             ),
           ),
         ],
@@ -252,78 +272,107 @@ class _TimetableScreenState extends State<TimetableScreen> {
         backgroundColor: _pitchBlack,
         foregroundColor: _neonPink,
         elevation: 0,
+        actions: [
+          if (hasData)
+            IconButton(
+              icon: const Icon(Icons.ios_share_rounded),
+              onPressed: _exportTimetable,
+              tooltip: 'Export Timetable',
+            ),
+        ],
       ),
-      body: _loading
-          ? const Center(
-              child: CircularProgressIndicator(color: _neonPink),
-            )
-          : !hasData 
-              ? _buildNoDataView() 
-              : Column(
-                  children: [
-                    if (_isTodayHoliday) _buildHolidayBanner(),
-                    
-                    // Day indicator dots (PRESERVED LOGIC)
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(5, (index) {
-                          final bool isActive = _activePageIndex == index;
-                          
-                          return GestureDetector(
-                            onTap: () {
-                              _pageController.animateToPage(
-                                index,
-                                duration: const Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              margin: const EdgeInsets.symmetric(horizontal: 4),
-                              width: isActive ? 32 : 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: isActive
-                                    ? _neonPink
-                                    : _white.withValues(alpha:0.3),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ),
-                    
-                    // Page view (FIXED & PRESERVED)
-                    Expanded(
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: 5,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _activePageIndex = index;
-                          });
-                        },
-                        itemBuilder: (context, index) {
-                          final day = index + 1;
-                          final currentDay = _timetableService.currentDayOrder;
-                          final isToday = currentDay == day && 
-                                               currentDay >= 1 && 
-                                               currentDay <= 5;
-                          final classes = _timetableService.getClassesForDay(day);
-                          
-                          return DayOrderCard(
-                            day: day,
-                            isCurrentDay: isToday,
-                            classes: classes,
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+      body: Stack(
+        children: [
+          if (hasData)
+            Positioned(
+              left: -5000,
+              top: -5000,
+              child: RepaintBoundary(
+                key: _exportKey,
+                child: Material(
+                  color: Colors.transparent,
+                  child: TimetableExportWidget(
+                    program: _program,
+                    semester: _semester,
+                    service: _timetableService,
+                  ),
                 ),
+              ),
+            ),
+          Positioned.fill(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(color: _neonPink),
+                  )
+                : !hasData 
+                    ? _buildNoDataView() 
+                    : Column(
+                        children: [
+                          if (_isTodayHoliday) _buildHolidayBanner(),
+                          
+                          // Day indicator dots
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(5, (index) {
+                                final bool isActive = _activePageIndex == index;
+                                return GestureDetector(
+                                  onTap: () {
+                                    _pageController.animateToPage(
+                                      index,
+                                      duration: const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                                    width: isActive ? 32 : 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? _neonPink
+                                          : _white.withValues(alpha:0.3),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ),
+                          
+                          // Page view
+                          Expanded(
+                            child: PageView.builder(
+                              controller: _pageController,
+                              itemCount: 5,
+                              onPageChanged: (index) {
+                                setState(() {
+                                  _activePageIndex = index;
+                                });
+                              },
+                              itemBuilder: (context, index) {
+                                final day = index + 1;
+                                final currentDay = _timetableService.currentDayOrder;
+                                final isToday = currentDay == day && 
+                                                     currentDay >= 1 && 
+                                                     currentDay <= 5;
+                                final classes = _timetableService.getClassesForDay(day);
+                                
+                                return DayOrderCard(
+                                  day: day,
+                                  isCurrentDay: isToday,
+                                  classes: classes,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+          ),
+        ],
+      ),
     );
   }
 }

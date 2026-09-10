@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../services/theme_controller.dart';
 
 class ContactUs extends StatelessWidget {
@@ -62,13 +63,21 @@ class ContactUs extends StatelessWidget {
           const SizedBox(height: 12),
 
           // Version
-          Text(
-            'Version 1.31.26 • Built by Team Console',
-            style: TextStyle(
-              color: theme.textSecondary.withValues(alpha: 0.5),
-              fontSize: 10,
-              letterSpacing: 0.5,
-            ),
+          FutureBuilder<PackageInfo>(
+            future: PackageInfo.fromPlatform(),
+            builder: (context, snapshot) {
+              final versionStr = snapshot.hasData 
+                  ? 'Version ${snapshot.data!.version} • Built by Team Console'
+                  : 'Built by Team Console';
+              return Text(
+                versionStr,
+                style: TextStyle(
+                  color: theme.textSecondary.withValues(alpha: 0.5),
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                ),
+              );
+            },
           ),
         ],
       ),

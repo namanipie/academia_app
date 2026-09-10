@@ -151,10 +151,7 @@ class AttendanceTrendWidget extends StatefulWidget {
 
 class _AttendanceTrendWidgetState extends State<AttendanceTrendWidget> {
   // --- BLUE SHADES ONLY COLOR PALETTE ---
-  static const Color _navyBlue = Color(0xFF2C5F9E);
-  static const Color _lightNavy = Color(0xFF4A7DC4);
   static const Color _skyBlue = Color(0xFF64B5F6);
-  static const Color _deepBlue = Color(0xFF1565C0);
   static const Color _white = Color(0xFFFFFFFF);
 
   List<AttendanceTrendData> _trendData = [];

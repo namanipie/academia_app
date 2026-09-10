@@ -75,8 +75,9 @@ class AttendanceSimulatorService {
 
   int _calculateBunksFromDates(AttendanceSimulationInput input) {
     if (input.skippedDates == null || input.skippedDates!.isEmpty) return 0;
-    if (input.resolveDayOrder == null || input.getClassesForDayOrder == null)
+    if (input.resolveDayOrder == null || input.getClassesForDayOrder == null) {
       return 0;
+    }
 
     int bunkCount = 0;
     for (final date in input.skippedDates!) {
