@@ -244,7 +244,7 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
   try {
     // Check connectivity
     final connectivity = await Connectivity().checkConnectivity();
-    bool isOffline = connectivity == ConnectivityResult.none;
+    bool isOffline = connectivity.isEmpty || connectivity.contains(ConnectivityResult.none);
 
     // Fetch data from Firestore (server or cache)
     final snapshot = await db.collection('calendar').get(

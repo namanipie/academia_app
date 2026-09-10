@@ -81,7 +81,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
 
   try {
     final connectivity = await Connectivity().checkConnectivity();
-    final bool isOffline = connectivity == ConnectivityResult.none;
+    final bool isOffline = connectivity.isEmpty || connectivity.contains(ConnectivityResult.none);
 
     // Choose source: if forceServer => server; else serverAndCache when online, cache when offline.
     final Source source = forceServer
@@ -199,7 +199,7 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
     }
   } catch (e, st) {
     if (kDebugMode) debugPrint('❌ Error fetching Firestore materials data: $e');
-    if (kDebugMode) debugPrint(st);
+    if (kDebugMode) debugPrint(st.toString());
 
     // fallback to in-memory cache if available
     if (MaterialsCache.lastData != null) {
