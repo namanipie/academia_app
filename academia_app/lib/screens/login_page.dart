@@ -1,14 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
 
 // Assuming these paths remain the same in your project
 import '../utils/responsive_helper.dart';
-import '../services/srm_native_client.dart';
 import '../utils/day_order_backup.dart';
 import 'package:academia_app/screens/dasboardscreen.dart';
 import '../club_events_social/services/club_main_service.dart';
@@ -19,6 +18,9 @@ class CLoginPage extends StatefulWidget {
   @override
   State<CLoginPage> createState() => _CLoginPageState();
 }
+
+Map<String, dynamic> _decodeJson(String source) => jsonDecode(source);
+String _encodeJson(Map<String, dynamic> data) => jsonEncode(data);
 
 class _CLoginPageState extends State<CLoginPage> {
   final TextEditingController _emailController = TextEditingController();
@@ -115,15 +117,26 @@ class _CLoginPageState extends State<CLoginPage> {
       _isLoading = true;
     });
 
+    final url = Uri.parse(
+      'https://academia-scrapper-api-fast.onrender.com/scrape',
+    );
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    try {
-      final client = SrmNativeClient();
-      final loggedIn = await client.login(email, password);
+    final body = jsonEncode({"email": email, "password": password});
 
-      if (loggedIn) {
-        final data = await client.fetchAllData();
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "accept": "application/json",
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        final data = await compute(_decodeJson, response.body);
         final prefs = await SharedPreferences.getInstance();
 
         await prefs.setString('userEmail', email);
@@ -145,24 +158,22 @@ class _CLoginPageState extends State<CLoginPage> {
           }
         }
 
-        await prefs.setString('userData', jsonEncode(data));
+        final encodedData = await compute(
+          _encodeJson,
+          data,
+        );
+        await prefs.setString('userData', encodedData);
         await prefs.setString(
           'lastRefreshTime',
           DateTime.now().toIso8601String(),
         );
-        if (data['marks'] != null) {
-          await prefs.setString(
-            'student_portal_result',
-            jsonEncode(data['marks']),
-          );
-        }
 
         // Extract email part before @ and auto-resubscribe to clubs
         final emailPart = email.split('@')[0];
         try {
           await ApiService().autoResubscribeToClubs(emailPart);
         } catch (e) {
-          if (kDebugMode) debugPrint('⚠ Auto-resubscription failed: $e');
+          print('⚠ Auto-resubscription failed: $e');
           // Continue with login even if auto-resubscription fails
         }
 
@@ -173,12 +184,20 @@ class _CLoginPageState extends State<CLoginPage> {
           );
         }
       } else {
-        _showErrorBottomSheet(
-          "Login failed. Check your credentials or SRM is down.",
-        );
+        // Try to parse error message from server if it exists
+        String errorMessage = 'Status Code: ${response.statusCode}';
+        try {
+          final errorData = jsonDecode(response.body);
+          errorMessage =
+              errorData['detail'] ?? errorData['message'] ?? errorMessage;
+        } catch (_) {}
+
+        _showErrorBottomSheet(errorMessage);
       }
     } catch (e) {
-      _showErrorBottomSheet("Network error: $e");
+      _showErrorBottomSheet(
+        'Unable to connect to the server. Check your internet connection.',
+      );
     } finally {
       if (mounted) {
         setState(() {
