@@ -259,9 +259,11 @@ Future<Map<String, Map<String, dynamic>>> getEventsData() async {
     }
 
     if (eventsData.isEmpty) {
-      if (kDebugMode) debugPrint(isOffline
+      if (kDebugMode) {
+        debugPrint(isOffline
           ? '⚠️ No cached calendar data found (offline).'
           : '⚠️ No calendar data found in Firestore.');
+      }
     } else {
       if (kDebugMode) debugPrint('✅ Calendar data fetched from ${isOffline ? 'cache' : 'server/cache'}.');
 

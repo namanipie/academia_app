@@ -30,11 +30,11 @@ class CreateEventBottomSheet extends StatefulWidget {
   final Map<String, dynamic>? initialData;
 
  const CreateEventBottomSheet({
-  Key? key,
+  super.key,
   required this.onSave,
   this.isEditing = false,
   this.initialData,
-}) : super(key: key);
+});
 
   @override
   State<CreateEventBottomSheet> createState() => _CreateEventBottomSheetState();
@@ -48,7 +48,7 @@ class _CreateEventBottomSheetState extends State<CreateEventBottomSheet> {
   String _title = '';
   String _description = '';
   String _priority = 'mid'; // Default priority
-  String _type = 'custom'; // Default type
+  final String _type = 'custom'; // Default type
   bool _notificationEnabled = false;
 
   @override
@@ -87,8 +87,7 @@ class _CreateEventBottomSheetState extends State<CreateEventBottomSheet> {
               onPrimary: Colors.white,
               surface: Color(0xFF1A1A1A),
               onSurface: Colors.white,
-            ),
-            dialogBackgroundColor: const Color(0xFF1A1A1A),
+            ), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF1A1A1A)),
           ),
           child: child!,
         );
@@ -114,8 +113,7 @@ class _CreateEventBottomSheetState extends State<CreateEventBottomSheet> {
               onPrimary: Colors.white,
               surface: Color(0xFF1A1A1A),
               onSurface: Colors.white,
-            ),
-            dialogBackgroundColor: const Color(0xFF1A1A1A),
+            ), dialogTheme: DialogThemeData(backgroundColor: const Color(0xFF1A1A1A)),
           ),
           child: child!,
         );
@@ -469,14 +467,14 @@ class DateCellWidget extends StatelessWidget {
   final String? dayOrder; 
 
   const DateCellWidget({
-    Key? key,
+    super.key,
     required this.day,
     required this.isToday,
     required this.hasEvents,
     required this.events,
     required this.getEventColor,
     this.dayOrder, 
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -584,10 +582,10 @@ class EventItemWidget extends StatelessWidget {
   final GetEventColor getEventColor;
 
   const EventItemWidget({
-    Key? key,
+    super.key,
     required this.event,
     required this.getEventColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -702,10 +700,10 @@ class LegendItemWidget extends StatelessWidget {
   final Color color;
 
   const LegendItemWidget({
-    Key? key,
+    super.key,
     required this.label,
     required this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

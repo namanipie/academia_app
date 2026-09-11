@@ -22,7 +22,6 @@ import '../components/contact_us.dart';
 import '../services/theme_controller.dart';
 import '../widgets/next_class_widget.dart';
 import 'settings_screen.dart';
-import 'package:flutter/cupertino.dart';
 
 // ============================================================================
 // HOME SCREEN - Student profile and overview

@@ -16,7 +16,7 @@ import '../screens/timetablescreen.dart';
 import 'package:flutter/cupertino.dart'; 
 
 class CalendarScreen extends StatefulWidget {
-  const CalendarScreen({Key? key}) : super(key: key);
+  const CalendarScreen({super.key});
 
   @override
   State<CalendarScreen> createState() => _CalendarScreenState();
@@ -156,7 +156,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Future<void> _savePriorityColorMap() async {
     final prefs = await SharedPreferences.getInstance();
     final Map<String, int> encodedMap = 
-        _priorityColorMap.map((key, value) => MapEntry(key, value.value));
+        _priorityColorMap.map((key, value) => MapEntry(key, value.toARGB32()));
     await prefs.setString('priorityColorMap', json.encode(encodedMap));
   }
 
@@ -519,7 +519,7 @@ List<Map<String, dynamic>> _getAllCustomEvents() {
               ...events.map((event) => EventItemWidget(
                 event: event as Map<String, dynamic>,
                 getEventColor: _getEventColor, // Pass the utility function
-              )).toList(),
+              )),
             ],
           ),
         ),
@@ -681,7 +681,7 @@ List<Map<String, dynamic>> _getAllCustomEvents() {
                   onTap: canOpenDetails
                       ? () {
                           if (hasEvents) {
-                            _showEventDetails(date, events!);
+                            _showEventDetails(date, events);
                           } else if (dayOrder != null) {
                             _showDayDetails(date, dayOrder);
                           }

@@ -94,9 +94,11 @@ Future<Map<String, Map<String, dynamic>>> getMaterialsData({
     if (kDebugMode) debugPrint('DEBUG: detected semester keys = ${semSnapshot.docs.map((d) => d.id).toList()}');
     
     if (semSnapshot.docs.isEmpty) {
-      if (kDebugMode) debugPrint(isOffline
+      if (kDebugMode) {
+        debugPrint(isOffline
           ? '⚠️ No cached materials found (offline).'
           : '⚠️ No materials found in Firestore.');
+      }
     }
 
     if (fetchAll) {

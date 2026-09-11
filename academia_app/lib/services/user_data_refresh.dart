@@ -10,6 +10,7 @@ Map<String, dynamic> _decodeJson(String source) => jsonDecode(source);
 class DataRefreshService {
   static Future<bool> refreshData() async {
     try {
+      debugPrint('[SRM REFRESH] Starting background refresh...');
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString('userEmail');
       final password = prefs.getString('userPassword');
@@ -28,8 +29,9 @@ class DataRefreshService {
       }
 
       if (email == null || password == null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint("❌ Background refresh failed: no credentials");
+        }
         return false;
       }
 
@@ -54,9 +56,11 @@ class DataRefreshService {
         body: jsonEncode(requestBody),
       );
 
+      debugPrint('[SRM REFRESH] HTTP Status: ');
       if (response.statusCode != 200) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint("❌ Background API failed: ${response.statusCode}");
+        }
         return false;
       }
 
@@ -73,7 +77,7 @@ class DataRefreshService {
       // 4. Save the entire new response (which includes updated session_data)
       final encodedData = await compute(
         _encodeJson,
-        data as Map<String, dynamic>,
+        data,
       );
       await prefs.setString('userData', encodedData);
       await prefs.setString(
@@ -81,8 +85,9 @@ class DataRefreshService {
         DateTime.now().toIso8601String(),
       );
 
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint("✅ Background refresh success using nested session data");
+      }
       return true;
     } catch (e) {
       if (kDebugMode) debugPrint("❌ Background refresh error: $e");

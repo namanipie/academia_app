@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../widgets/attendance_trend_widget.dart'; // Ensure this path is correct

@@ -216,7 +216,7 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
         ),
       );
       return;
-    };
+    }
     setState(() => _isLiking = true);
     try {
       final response = await _api.toggleLike(widget.post.postId, _currentUserTruncatedEmail!);

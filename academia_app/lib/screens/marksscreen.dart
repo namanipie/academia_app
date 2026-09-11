@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,7 +23,7 @@ class _MarksScreenState extends State<MarksScreen> {
   static const Color _declineGray = Color(0xFF505050); // Used in place of red/yellow for decline
   static const Color _textSecondary = Color(0xFFB0B0B0);
 
-  Map<String, int> _courseCredits = {};
+  final Map<String, int> _courseCredits = {};
   bool _loading = true;
   List<Map<String, dynamic>> _marks = [];
 
@@ -423,7 +422,7 @@ Future<void> _loadMarksFromPrefs() async {
                 ],
               ),
               const SizedBox(height: 12),
-              ...tests.map((test) => _buildModernTestRow(test)).toList(),
+              ...tests.map((test) => _buildModernTestRow(test)),
             ],
           ),
         ),

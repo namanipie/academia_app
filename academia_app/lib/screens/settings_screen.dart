@@ -31,9 +31,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   int? credits;
 
   String? _appVersion;
-  String? _playStoreVersion;
+  
   bool _loading = true;
-  bool _isSyncing = false;
+  
 
   @override
   void initState() {
@@ -47,68 +47,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final info = await PackageInfo.fromPlatform();
       if (mounted) {
         setState(() {
-          _appVersion = '${info.version} (${info.buildNumber})';
+          _appVersion = info.version;
         });
       }
-
-      final response = await http.get(
-        Uri.parse(
-          'https://play.google.com/store/apps/details?id=${info.packageName}&hl=en',
-        ),
-      );
-      if (response.statusCode == 200) {
-        final match = RegExp(
-          r'\[\[\["([0-9]+\.[0-9]+\.[0-9]+.*?)"\]\]',
-        ).firstMatch(response.body);
-        if (match != null && mounted) {
-          setState(() {
-            _playStoreVersion = match.group(1);
-          });
-        }
-      }
     } catch (_) {
-      // Graceful fallback: do nothing if Play Store fetch fails
+      // Graceful fallback
     }
   }
 
-  Future<void> _handleSync() async {
-    final prefs = await SharedPreferences.getInstance();
-    final email = prefs.getString('userEmail');
-    if (email == null || email.isEmpty) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CLoginPage()),
-        );
-      }
-      return;
-    }
-
-    setState(() => _isSyncing = true);
-    try {
-      final success = await DataRefreshService.refreshData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              success
-                  ? 'Sync complete. Last updated just now.'
-                  : 'Sync failed. Your existing data has been kept.',
-              style: TextStyle(color: ThemeController.instance.textPrimary),
-            ),
-            backgroundColor: ThemeController.instance.cardBg,
-          ),
-        );
-        if (success) {
-          await _loadUserData();
-        }
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSyncing = false);
-      }
-    }
-  }
+  
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -257,64 +204,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      _buildSectionHeader('ACCOUNT / SYNC', theme),
-                      _buildActionTile(
-                        theme: theme,
-                        icon: Icons.sync_rounded,
-                        title: 'Sync with SRM Portal',
-                        subtitle: _isSyncing
-                            ? 'Syncing...'
-                            : 'Refresh academic data',
-                        isLoading: _isSyncing,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          if (!_isSyncing) {
-                            _handleSync();
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _buildActionTile(
-                        theme: theme,
-                        icon: Icons.bug_report_outlined,
-                        title: 'Report a Problem',
-                        subtitle: 'Help improve Academia',
-                        onTap: () async {
-                          HapticFeedback.lightImpact();
-                          final url = Uri.parse(
-                            'https://github.com/Akshat2711/academia_app/issues',
-                          );
-                          final canLaunch = await canLaunchUrl(url);
-                          if (!context.mounted) return;
 
-                          if (canLaunch) {
-                            await launchUrl(
-                              url,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Could not open GitHub link.',
-                                  style: TextStyle(color: theme.textPrimary),
-                                ),
-                                backgroundColor: theme.cardBg,
-                              ),
-                            );
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 32),
 
                       _buildSectionHeader('ABOUT', theme),
                       _buildActionTile(
                         theme: theme,
                         icon: Icons.info_outline_rounded,
                         title: 'About Academia',
-                        subtitle: _appVersion != null
-                            ? 'Version $_appVersion${_playStoreVersion != null ? '\nLatest on Play Store: $_playStoreVersion' : ''}'
-                            : 'Loading version...',
+                        subtitle: _appVersion != null ? 'Version $_appVersion • Built by Team Console' : 'Loading version...',
                         onTap: () {},
                       ),
                       const SizedBox(height: 12),
@@ -564,7 +461,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Expanded(
             child: Text(
               value,
-              textAlign: TextAlign.right,
+              textAlign: TextAlign.left,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,

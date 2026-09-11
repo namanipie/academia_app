@@ -126,6 +126,7 @@ class _CLoginPageState extends State<CLoginPage> {
     final body = jsonEncode({"email": email, "password": password});
 
     try {
+      debugPrint('[SRM AUTH] Starting login attempt');
       final response = await http.post(
         url,
         headers: {
@@ -135,6 +136,7 @@ class _CLoginPageState extends State<CLoginPage> {
         body: body,
       );
 
+      debugPrint('[SRM AUTH] HTTP Status: ');
       if (response.statusCode == 200) {
         final data = await compute(_decodeJson, response.body);
         final prefs = await SharedPreferences.getInstance();

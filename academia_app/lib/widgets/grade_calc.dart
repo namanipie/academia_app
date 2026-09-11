@@ -532,7 +532,7 @@ class _CourseMarksCard extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '${currentTotal.toStringAsFixed(2)}',
+                              currentTotal.toStringAsFixed(2),
                               style: TextStyle(
                                 color: Colors.grey[300],
                                 fontSize: 11,

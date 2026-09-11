@@ -26,7 +26,7 @@ class ExportService {
 
       // Save to temp directory for sharing
       final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/academia_timetable.png').create();
+      final file = await File('${tempDir.path}/Academia_Timetable.png').create();
       await file.writeAsBytes(buffer);
 
       // Share using share_plus

@@ -31,7 +31,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final TextEditingController _clubPassController = TextEditingController();
   
   bool _isIndividual = true;
-  List<File> _selectedImages = [];
+  final List<File> _selectedImages = [];
   double _expiryDays = 7; 
   bool _isUploading = false;
   String _truncatedUserEmail = "";
@@ -430,7 +430,7 @@ Widget _buildModernInput(
               Switch(
                 value: _sendNotification,
                 onChanged: (value) => setState(() => _sendNotification = value),
-                activeColor: kAccentWhite,
+                activeThumbColor: kAccentWhite,
                 activeTrackColor: kSoftGrey,
               ),
             ],
@@ -443,7 +443,7 @@ Widget _buildModernInput(
               Switch(
                 value: _sendEmail,
                 onChanged: (value) => setState(() => _sendEmail = value),
-                activeColor: kAccentWhite,
+                activeThumbColor: kAccentWhite,
                 activeTrackColor: kSoftGrey,
               ),
             ],

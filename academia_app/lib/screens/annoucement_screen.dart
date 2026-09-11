@@ -52,7 +52,7 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
       final parts = dateString.split('_');
       // Date format is MM_DD_YYYY
       final dateTime = DateTime(
-          int.parse(parts[2]!), int.parse(parts[0]!), int.parse(parts[1]!));
+          int.parse(parts[2]), int.parse(parts[0]), int.parse(parts[1]));
       // Format to a more readable string, e.g., 'Oct 12, 2025'
       return DateFormat('MMM dd, yyyy').format(dateTime);
     } catch (e) {
@@ -76,9 +76,9 @@ class _AnnouncementScreenState extends State<AnnouncementScreen> {
 
         // Create DateTime objects: DateTime(year, month, day)
         final DateTime timeA = DateTime(
-            int.parse(dateA[2]!), int.parse(dateA[0]!), int.parse(dateA[1]!));
+            int.parse(dateA[2]), int.parse(dateA[0]), int.parse(dateA[1]));
         final DateTime timeB = DateTime(
-            int.parse(dateB[2]!), int.parse(dateB[0]!), int.parse(dateB[1]!));
+            int.parse(dateB[2]), int.parse(dateB[0]), int.parse(dateB[1]));
 
         // timeB.compareTo(timeA) ensures descending order (Latest to Oldest)
         return timeB.compareTo(timeA);
