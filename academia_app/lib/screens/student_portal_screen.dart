@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/student_portal_data.dart';
+import '../widgets/student_portal_auth_dialog.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -137,29 +138,29 @@ class _MainPortalPageState extends State<MainPortalPage> {
               "STUDENT\nPORTAL", 
               style: TextStyle(color: kAccentNeon, fontWeight: FontWeight.w900, fontSize: 32)
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
-              "In-app syncing is temporarily unavailable due to SRM's new CAPTCHA security.",
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 16, height: 1.5),
+              "Connect your SRM Student Portal account to sync Attendance, Internal Marks, and CGPA in Console.",
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 16, height: 1.5, fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 16),
-            Text(
-              "You can still view your results by opening the official SRM portal directly.",
+            const SizedBox(height: 12),
+            const Text(
+              "Sign in securely with your NetID credentials and solve the CAPTCHA once to link your academic records.",
               style: TextStyle(color: kMutedText, fontSize: 14, height: 1.5),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               height: 56,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  final url = Uri.parse('https://sp.srmist.edu.in/srmiststudentportal/');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  final success = await StudentPortalAuthDialog.show(context);
+                  if (success == true) {
+                    _checkLocalStorage();
                   }
                 },
-                icon: const Icon(Icons.open_in_browser_rounded),
-                label: const Text("OPEN OFFICIAL PORTAL", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
+                icon: const Icon(Icons.sync_rounded),
+                label: const Text("CONNECT & SYNC PORTAL", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kAccentNeon, 
                   foregroundColor: Colors.black, 
@@ -167,18 +168,33 @@ class _MainPortalPageState extends State<MainPortalPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
-              height: 56,
-              child: OutlinedButton(
-                onPressed: () => Navigator.pop(context),
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final url = Uri.parse('https://sp.srmist.edu.in/srmiststudentportal/');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+                icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                label: const Text("OPEN IN BROWSER", style: TextStyle(fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: kMutedText),
-                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white24),
+                  foregroundColor: Colors.white70,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
                 ),
-                child: const Text("GO BACK", style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("GO BACK", style: TextStyle(color: kMutedText, fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -205,6 +221,16 @@ class _MainPortalPageState extends State<MainPortalPage> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.sync_rounded, color: Colors.white, size: 20),
+            tooltip: 'Sync Student Portal',
+            onPressed: () async {
+              final success = await StudentPortalAuthDialog.show(context);
+              if (success == true) {
+                _checkLocalStorage();
+              }
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
             onPressed: _handleLogout,

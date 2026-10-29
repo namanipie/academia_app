@@ -58,7 +58,7 @@ Future<void> _warmUpServer() async {
   _hasWarmedUp = true;
   try {
     // We don't care about the result, just hitting the metal to wake it up
-    await http.get(Uri.parse("https://microservice-console.onrender.com/health")).catchError((_){});
+    await http.get(Uri.parse("https://microservice-console.onrender.com/health")).timeout(const Duration(seconds: 2));
   } catch (e) {
     // Silent fail is fine here, we just want the server to see the request
   }

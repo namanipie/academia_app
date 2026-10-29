@@ -26,7 +26,11 @@ Future<void> logoutAction(BuildContext context) async {
   // 2. Call API logout (Fire and forget or minimal wait)
   if (email != null && password != null) {
     try {
-      final url = Uri.parse('https://academia-scrapper-api-fast.onrender.com/logout');
+      final url = Uri.parse(
+        kDebugMode
+            ? 'http://127.0.0.1:8000/logout'
+            : 'https://academia-scrapper-api-fast.onrender.com/logout',
+      );
       
       // We don't necessarily need to 'await' this if we want a snappy UI response,
       // but it's cleaner to let the server know we're done.
@@ -58,6 +62,8 @@ Future<void> logoutAction(BuildContext context) async {
     'userPassword',
     'lastRefreshTime',
     'student_portal_result',
+    'student_portal_connected',
+    'student_portal_last_synced',
     'nearby_history',
   ];
 

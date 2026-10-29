@@ -206,7 +206,21 @@ class _HomeScreenState extends State<HomeScreen> {
           if (parsedData['attendance'] != null && parsedData['attendance'] is Map) {
             final attendanceData = parsedData['attendance'] as Map;
             if (attendanceData['student_info'] != null && attendanceData['student_info'] is Map) {
-              studentInfo = Map<String, dynamic>.from(attendanceData['student_info']);
+              final attInfo = Map<String, dynamic>.from(attendanceData['student_info']);
+              if (attInfo['name'] != null && attInfo['name'].toString().trim().isNotEmpty) {
+                studentInfo = attInfo;
+              }
+            }
+          }
+          if (studentInfo == null || studentInfo?['name'] == null || studentInfo!['name'].toString().trim().isEmpty) {
+            if (parsedData['timetable'] != null && parsedData['timetable'] is Map) {
+              final timetableData = parsedData['timetable'] as Map;
+              if (timetableData['student_info'] != null && timetableData['student_info'] is Map) {
+                final ttInfo = Map<String, dynamic>.from(timetableData['student_info']);
+                if (ttInfo['name'] != null && ttInfo['name'].toString().trim().isNotEmpty) {
+                  studentInfo = ttInfo;
+                }
+              }
             }
           }
         } catch (e) {
@@ -336,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final displayName = _isGuest ? 'Guest User' : (studentInfo?['name']?.toString() ?? 'No data found');
         final regno = _isGuest ? 'Not Logged In' : (studentInfo?['registration_number']?.toString() ?? 'No data found');
         final program = _isGuest ? 'Guest' : (studentInfo?['program']?.toString() ?? 'No data found');
-        final specialization = _isGuest ? 'Mode' : (studentInfo?['specialization']?.toString() ?? 'No data found');
+        final specialization = _isGuest ? 'Mode' : (studentInfo?['specialization']?.toString() ?? studentInfo?['department']?.toString() ?? 'No data found');
         final semester = _isGuest ? '-' : (studentInfo?['semester']?.toString() ?? 'No data found');
 
         return Scaffold(
@@ -425,10 +439,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           // The new Next Class / Day Order Widget
                           const NextClassWidget(),
 
-                          // Re-sync banner when backend is CAPTCHA-blocked
-                          if (false)
-                            _buildResyncBanner(theme),
-
                           StatsBar(
                             overallAttendance: _overallAttendance,
                             courseCount: _courseCount,
@@ -436,6 +446,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             primaryColor: theme.primaryAccent,
                           ),
                           
+
+
                           const SizedBox(height: 16),
 
                           QuickActions(primaryColor: theme.primaryAccent),
@@ -485,67 +497,5 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  Widget _buildResyncBanner(ThemeController theme) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: GestureDetector(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEF4444).withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: const Color(0xFFEF4444).withValues(alpha: 0.25),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.sync_problem_rounded,
-                  color: Color(0xFFEF4444),
-                  size: 18,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Session expired',
-                      style: TextStyle(
-                        color: theme.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Tap to re-sync with SRM Portal',
-                      style: TextStyle(
-                        color: theme.textSecondary.withValues(alpha: 0.7),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: theme.textSecondary.withValues(alpha: 0.4),
-                size: 14,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-  }
 }
+

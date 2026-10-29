@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/day_order_backup.dart';
+import '../services/student_portal_service.dart';
+import '../config/backend_config.dart';
 
 String _encodeJson(Map<String, dynamic> data) => jsonEncode(data);
 Map<String, dynamic> _decodeJson(String source) => jsonDecode(source);
@@ -12,8 +13,29 @@ class DataRefreshService {
     try {
       debugPrint('[SRM REFRESH] Starting background refresh...');
       final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('userEmail');
-      final password = prefs.getString('userPassword');
+      var email = prefs.getString('userEmail');
+      var password = prefs.getString('userPassword');
+      final studentPortalPassword = prefs.getString('studentPortalPassword');
+      final studentPortalNetId = prefs.getString('studentPortalNetId');
+
+      if ((email == null || email.isEmpty) && studentPortalNetId != null) {
+        email = '$studentPortalNetId@srmist.edu.in';
+      }
+      if (email == null || email.isEmpty) {
+        final raw = prefs.getString('userData');
+        if (raw != null) {
+          try {
+            final parsed = json.decode(raw);
+            final netid = parsed['netid'] ?? parsed['student_info']?['reg_no'] ?? parsed['attendance']?['student_info']?['reg_no'];
+            if (netid != null && netid.toString().isNotEmpty) {
+              email = '${netid.toString().trim()}@srmist.edu.in';
+            }
+          } catch (_) {}
+        }
+      }
+      if ((password == null || password.isEmpty || password == 'guest') && studentPortalPassword != null) {
+        password = studentPortalPassword;
+      }
 
       if (email == null || password == null || email == 'guest@srmist.edu.in' || password == 'guest') {
         if (kDebugMode) {
@@ -36,31 +58,32 @@ class DataRefreshService {
         sessionData = fullData?['session_data'];
       }
 
-      final url = Uri.parse(
-        'https://academia-scrapper-api-fast.onrender.com/scrape',
-      );
-
       // 2. Build the request body
       final Map<String, dynamic> requestBody = {
         "email": email,
         "password": password,
+        if (studentPortalPassword != null && studentPortalPassword.isNotEmpty)
+          "student_portal_password": studentPortalPassword,
         if (sessionData != null)
           "session_data": sessionData, // Inline null check
       };
 
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-        },
-        body: jsonEncode(requestBody),
+      final response = await BackendConfig.postWithFallback(
+        '/scrape',
+        body: requestBody,
+        perAttemptTimeout: const Duration(seconds: 20),
       );
 
       debugPrint('[SRM REFRESH] HTTP Status: ${response.statusCode}');
       if (response.statusCode != 200) {
         if (kDebugMode) {
-          debugPrint("❌ Background API failed: ${response.statusCode}");
+          debugPrint("❌ Background API failed (${response.statusCode}), falling back to Gateway sync...");
+        }
+        final spPass = studentPortalPassword ?? password;
+        final gwRes = await StudentPortalService.syncViaGateway(username: email, password: spPass);
+        if (gwRes.success) {
+          await prefs.setString('lastRefreshTime', DateTime.now().toIso8601String());
+          return true;
         }
         return false;
       }
@@ -94,9 +117,14 @@ class DataRefreshService {
         final newTimetableCourses = data['timetable']?['courses'];
         final bool hasNewTimetable = newTimetableCourses is List && newTimetableCourses.isNotEmpty;
 
-        if (hadValidTimetable && !hasNewTimetable) {
+        bool newHasRealSlots = false;
+        if (hasNewTimetable) {
+          newHasRealSlots = newTimetableCourses.any((c) => c is Map && (c['slot']?.toString().trim().isNotEmpty ?? false));
+        }
+
+        if (hadValidTimetable && (!hasNewTimetable || !newHasRealSlots)) {
           if (kDebugMode) {
-            debugPrint("⚠ Preserving cached timetable because refreshed payload has empty timetable");
+            debugPrint("⚠ Preserving cached timetable because refreshed payload has no slots");
           }
           if (fullData['timetable'] != null) {
             data['timetable'] = fullData['timetable'];

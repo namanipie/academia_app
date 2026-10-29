@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
 import '../services/theme_controller.dart';
 import '../screens/theme_settings_screen.dart';
 import '../utils/logout_user.dart';
-import '../services/user_data_refresh.dart'; // Ensure this points to the refresh service
-import 'login_page.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -78,10 +75,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         final tt = parsedData['timetable'];
 
         Map<String, dynamic>? studentInfo;
-        if (att != null && att is Map && att['student_info'] != null) {
-          studentInfo = att['student_info'];
-        } else if (tt != null && tt is Map && tt['student_info'] != null) {
-          studentInfo = tt['student_info'];
+        if (att != null && att is Map && att['student_info'] != null && att['student_info'] is Map && (att['student_info']['name']?.toString().trim().isNotEmpty ?? false)) {
+          studentInfo = Map<String, dynamic>.from(att['student_info']);
+        } else if (tt != null && tt is Map && tt['student_info'] != null && tt['student_info'] is Map && (tt['student_info']['name']?.toString().trim().isNotEmpty ?? false)) {
+          studentInfo = Map<String, dynamic>.from(tt['student_info']);
+        }
+        if (studentInfo != null && tt != null && tt is Map && tt['student_info'] is Map) {
+          final ttInfo = Map<String, dynamic>.from(tt['student_info']);
+          for (final entry in ttInfo.entries) {
+            if (studentInfo[entry.key] == null || studentInfo[entry.key].toString().trim().isEmpty) {
+              studentInfo[entry.key] = entry.value;
+            }
+          }
         }
 
         int? loadedCourses;

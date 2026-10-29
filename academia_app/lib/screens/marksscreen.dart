@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/marks_stats_widget.dart';
+import '../widgets/student_portal_auth_dialog.dart';
+import '../services/student_portal_service.dart';
 
 class MarksScreen extends StatefulWidget {
   const MarksScreen({super.key});
@@ -33,7 +35,63 @@ class _MarksScreenState extends State<MarksScreen> {
     _loadMarksFromPrefs();
   }
 
-Future<void> _loadMarksFromPrefs() async {
+Future<void> _handlePortalSync() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('userEmail') ?? prefs.getString('netid') ?? '';
+      final password = prefs.getString('userPassword') ?? '';
+
+      if (email.isNotEmpty && password.isNotEmpty && password != 'guest') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Syncing internal marks from Student Portal...'),
+                ],
+              ),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+
+        final cleanNetId = email.split('@').first.trim();
+        final res = await StudentPortalService.syncViaGateway(
+          username: cleanNetId,
+          password: password,
+        );
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (res.success) {
+          await _loadMarksFromPrefs();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✓ Synced marks for ${res.marksCount} courses!'),
+              backgroundColor: const Color(0xFF00FF9D).withValues(alpha: 0.9),
+            ),
+          );
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    final success = await StudentPortalAuthDialog.show(context);
+    if (success == true) {
+      _loadMarksFromPrefs();
+    }
+  }
+
+  Future<void> _loadMarksFromPrefs() async {
   try {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString('userData');
@@ -121,27 +179,50 @@ Future<void> _loadMarksFromPrefs() async {
           if (testsRaw is List) {
             for (final t in testsRaw) {
               if (t is Map) {
+                final obtained = (t['obtained'] is num)
+                    ? (t['obtained'] as num).toDouble()
+                    : (t['obtained_marks'] is num)
+                        ? (t['obtained_marks'] as num).toDouble()
+                        : (t['obtained_marks'] != null
+                            ? double.tryParse(t['obtained_marks'].toString()) ?? 0.0
+                            : double.tryParse(t['obtained']?.toString() ?? '') ?? 0.0);
+                final max = (t['max'] is num)
+                    ? (t['max'] as num).toDouble()
+                    : (t['max_marks'] is num)
+                        ? (t['max_marks'] as num).toDouble()
+                        : (t['max_marks'] != null
+                            ? double.tryParse(t['max_marks'].toString()) ?? 0.0
+                            : double.tryParse(t['max']?.toString() ?? '') ?? 0.0);
+                final pct = (t['percentage'] is num)
+                    ? (t['percentage'] as num).toDouble()
+                    : (t['percentage'] != null
+                        ? double.tryParse(t['percentage'].toString()) ?? 0.0
+                        : (max > 0 ? (obtained / max) * 100 : 0.0));
                 tests.add({
-                  'name': t['test_name'] ?? '',
-                  'obtained': (t['obtained_marks'] is num)
-                      ? (t['obtained_marks'] as num).toDouble()
-                      : (t['obtained_marks'] != null
-                          ? double.tryParse(t['obtained_marks'].toString()) ??
-                              0.0
-                          : 0.0),
-                  'max': (t['max_marks'] is num)
-                      ? (t['max_marks'] as num).toDouble()
-                      : (t['max_marks'] != null
-                          ? double.tryParse(t['max_marks'].toString()) ?? 0.0
-                          : 0.0),
-                  'percentage': (t['percentage'] is num)
-                      ? (t['percentage'] as num).toDouble()
-                      : (t['percentage'] != null
-                          ? double.tryParse(t['percentage'].toString()) ?? 0.0
-                          : 0.0),
+                  'name': t['name'] ?? t['test_name'] ?? '',
+                  'obtained': obtained,
+                  'max': max,
+                  'percentage': pct,
                 });
               }
             }
+          } else if (testsRaw is Map) {
+            testsRaw.forEach((tName, tVal) {
+              if (tVal is Map) {
+                final got = double.tryParse(tVal['got']?.toString() ?? '0') ?? 0.0;
+                final tot = double.tryParse(tVal['total']?.toString() ?? '0') ?? 0.0;
+                var pct = double.tryParse(tVal['percentage']?.toString() ?? '0') ?? 0.0;
+                if (tot > 0 && pct == 0) {
+                  pct = (got / tot) * 100;
+                }
+                tests.add({
+                  'name': tName.toString(),
+                  'obtained': got,
+                  'max': tot,
+                  'percentage': pct,
+                });
+              }
+            });
           }
 
           // normalize course code (remove Theory/Practical suffixes)
@@ -238,6 +319,14 @@ Future<void> _loadMarksFromPrefs() async {
         backgroundColor: _pitchBlack,
         foregroundColor: _neonGreen,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sync_rounded, color: _white),
+            tooltip: 'Sync Student Portal',
+            onPressed: _handlePortalSync,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -250,37 +339,46 @@ Future<void> _loadMarksFromPrefs() async {
             const SizedBox(height: 20),
             ..._marks.map((course) => _buildCourseMarksCard(course))
           ] else
-                 Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 60),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.folder_off_rounded,
-                          color: _white.withValues(alpha: 0.2),
-                          size: 60,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Bruh, no marks yet? 💀',
-                          style: TextStyle(
-                            color: _white.withValues(alpha: 0.8),
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Cook up some grades and check back later.',
-                          style: TextStyle(
-                            color: _white.withValues(alpha: 0.4),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 40),
+              Icon(
+                Icons.folder_off_rounded,
+                color: _white.withValues(alpha: 0.2),
+                size: 50,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No internal marks cached',
+                style: TextStyle(
+                  color: _white.withValues(alpha: 0.8),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Connect your Student Portal account to load your internal marks.',
+                style: TextStyle(
+                  color: _white.withValues(alpha: 0.4),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _handlePortalSync,
+                icon: const Icon(Icons.sync_rounded, size: 18),
+                label: const Text('SYNC MARKS NOW', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF6B00),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 80),
         ],
       ),

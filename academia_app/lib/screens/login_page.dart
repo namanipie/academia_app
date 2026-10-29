@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lottie/lottie.dart';
 
@@ -11,6 +10,8 @@ import '../utils/responsive_helper.dart';
 import '../utils/day_order_backup.dart';
 import 'package:academia_app/screens/dasboardscreen.dart';
 import '../club_events_social/services/club_main_service.dart';
+import '../services/student_portal_service.dart';
+import '../config/backend_config.dart';
 
 class CLoginPage extends StatefulWidget {
   const CLoginPage({super.key});
@@ -117,37 +118,66 @@ class _CLoginPageState extends State<CLoginPage> {
       _isLoading = true;
     });
 
-    final url = Uri.parse(
-      'https://academia-scrapper-api-fast.onrender.com/scrape',
-    );
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    Map<String, dynamic>? data;
+    String? failureReason;
 
-    final body = jsonEncode({"email": email, "password": password});
-
+    // 1. Try local/remote backend server (/scrape)
     try {
-      debugPrint('[SRM AUTH] Starting login attempt');
-      final response = await http.post(
-        url,
-        headers: {
-          "Content-Type": "application/json",
-          "accept": "application/json",
-        },
-        body: body,
+      debugPrint('[SRM AUTH] Starting login attempt via backend /scrape...');
+      final response = await BackendConfig.postWithFallback(
+        '/scrape',
+        body: {"email": email, "password": password},
+        perAttemptTimeout: const Duration(seconds: 25),
       );
 
-      debugPrint('[SRM AUTH] HTTP Status: ${response.statusCode}');
       if (response.statusCode == 200) {
-        final data = await compute(_decodeJson, response.body);
-        if (data['status'] != 'success') {
-          final errorMsg = data['detail'] ?? data['message'] ?? 'Login failed. Please check credentials.';
-          _showErrorBottomSheet(errorMsg.toString());
-          return;
+        final decoded = await compute(_decodeJson, response.body);
+        if (decoded['status'] == 'success') {
+          data = decoded;
+        } else {
+          failureReason = decoded['detail'] ?? decoded['message'];
         }
+      } else if (response.statusCode == 401) {
+        try {
+          final decoded = await compute(_decodeJson, response.body);
+          failureReason = decoded['detail'] ?? decoded['message'];
+        } catch (_) {}
+      }
+    } catch (e) {
+      debugPrint('[SRM AUTH] Backend /scrape unavailable ($e). Falling back to direct Student Portal login...');
+    }
+
+    // 2. Direct native Student Portal fallback
+    if (data == null) {
+      try {
+        debugPrint('[SRM AUTH] Authenticating directly with Student Portal...');
+        final gwData = await StudentPortalService.loginAndBuildFullUserData(
+          username: email,
+          password: password,
+        );
+        if (gwData != null && gwData['status'] == 'success') {
+          data = gwData;
+        }
+      } catch (e) {
+        debugPrint('[SRM AUTH] Student Portal error: $e');
+      }
+    }
+
+    try {
+      if (data != null && data['status'] == 'success') {
         final prefs = await SharedPreferences.getInstance();
 
         await prefs.setString('userEmail', email);
         await prefs.setString('userPassword', password);
+        await prefs.setBool('student_portal_connected', true);
+        if (prefs.getString('studentPortalPassword') == null) {
+          await prefs.setString('studentPortalPassword', password);
+        }
+        if (prefs.getString('studentPortalNetId') == null) {
+          await prefs.setString('studentPortalNetId', email.split('@')[0]);
+        }
 
         int? dayOrder;
         if (data['attendance'] != null &&
@@ -175,14 +205,11 @@ class _CLoginPageState extends State<CLoginPage> {
           DateTime.now().toIso8601String(),
         );
 
-        // Extract email part before @ and auto-resubscribe to clubs
         final emailPart = email.split('@')[0];
-        try {
-          await ApiService().autoResubscribeToClubs(emailPart);
-        } catch (e) {
+        // Background task without blocking login transition
+        ApiService().autoResubscribeToClubs(emailPart).catchError((e) {
           debugPrint('⚠ Auto-resubscription failed: $e');
-          // Continue with login even if auto-resubscription fails
-        }
+        });
 
         if (mounted) {
           Navigator.pushReplacement(
@@ -191,20 +218,12 @@ class _CLoginPageState extends State<CLoginPage> {
           );
         }
       } else {
-        // Try to parse error message from server if it exists
-        String errorMessage = 'Status Code: ${response.statusCode}';
-        try {
-          final errorData = jsonDecode(response.body);
-          errorMessage =
-              errorData['detail'] ?? errorData['message'] ?? errorMessage;
-        } catch (_) {}
-
-        _showErrorBottomSheet(errorMessage);
+        _showErrorBottomSheet(
+          failureReason ?? 'Login failed. Please verify your NetID and password.',
+        );
       }
     } catch (e) {
-      _showErrorBottomSheet(
-        'Unable to connect to the server. Check your internet connection.',
-      );
+      _showErrorBottomSheet('Unexpected error: $e');
     } finally {
       if (mounted) {
         setState(() {

@@ -17,3 +17,6 @@ exeriment_ground/*firebase-adminsdk*.json
 **/.venv/
 **/venv/
 exeriment_ground/content_extraction/downloaded_resources/
+*.png
+namanipie/
+ref_code/

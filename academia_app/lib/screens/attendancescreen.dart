@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 import '../widgets/attendance_course_card.dart';
 import '../widgets/predict_bottom_sheet.dart';
 import '../services/attendance_simulator_service.dart';
+import '../widgets/student_portal_auth_dialog.dart';
+import '../services/student_portal_service.dart';
 import '../services/timetable_service.dart';
 
 class AttendanceScreen extends StatefulWidget {
@@ -49,6 +51,76 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     _loadAttendanceFromPrefs();
   }
 
+  static double _safeToDouble(dynamic val) {
+    if (val == null) return 0.0;
+    if (val is num) return val.toDouble();
+    final s = val.toString().replaceAll('%', '').trim();
+    return double.tryParse(s) ?? 0.0;
+  }
+
+  static int _safeToInt(dynamic val) {
+    if (val == null) return 0;
+    if (val is num) return val.toInt();
+    final s = val.toString().trim();
+    return int.tryParse(s) ?? (double.tryParse(s)?.toInt() ?? 0);
+  }
+
+  Future<void> _handlePortalSync() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('userEmail') ?? prefs.getString('netid') ?? '';
+      final password = prefs.getString('userPassword') ?? '';
+
+      if (email.isNotEmpty && password.isNotEmpty && password != 'guest') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Syncing attendance from Student Portal...'),
+                ],
+              ),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+
+        final cleanNetId = email.split('@').first.trim();
+        final res = await StudentPortalService.syncViaGateway(
+          username: cleanNetId,
+          password: password,
+        );
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+        if (res.success) {
+          await _loadAttendanceFromPrefs();
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✓ Synced ${res.coursesCount} courses successfully!'),
+              backgroundColor: const Color(0xFF00FF9D).withValues(alpha: 0.9),
+            ),
+          );
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (!mounted) return;
+    final success = await StudentPortalAuthDialog.show(context);
+    if (success == true) {
+      _loadAttendanceFromPrefs();
+    }
+  }
+
   Future<void> _loadAttendanceFromPrefs() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -58,9 +130,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         final overall = data['attendance']?['attendance'];
         if (overall != null) {
           setState(() {
-            _overallAttendance = (overall['overall_attendance'] ?? 0).toDouble();
-            _totalConducted = (overall['total_hours_conducted'] ?? 0).toInt();
-            _totalAbsent = (overall['total_hours_absent'] ?? 0).toInt();
+            _overallAttendance = _safeToDouble(overall['overall_attendance']);
+            _totalConducted = _safeToInt(overall['total_hours_conducted']);
+            _totalAbsent = _safeToInt(overall['total_hours_absent']);
 
             final coursesMap = overall['courses'];
             if (coursesMap is Map) {
@@ -70,9 +142,9 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                   'unique_id': entry.key,
                   'title': v['course_title'] ?? entry.key,
                   'category': (v['category'] ?? '').toString().split('(').first.trim(),
-                  'conducted': (v['hours_conducted'] ?? 0).toInt(),
-                  'absent': (v['hours_absent'] ?? 0).toInt(),
-                  'percentage': (v['attendance_percentage'] ?? 0.0).toDouble(),
+                  'conducted': _safeToInt(v['hours_conducted']),
+                  'absent': _safeToInt(v['hours_absent']),
+                  'percentage': _safeToDouble(v['attendance_percentage']),
                 };
               }).toList();
             }
@@ -176,6 +248,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         centerTitle: false,
         actions: [
           IconButton(
+            icon: const Icon(Icons.sync_rounded, color: _white),
+            tooltip: 'Sync Student Portal',
+            onPressed: _handlePortalSync,
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: _white),
             onPressed: () {},
           ),
@@ -188,7 +265,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               children: [
                 _buildOverallCard(isSimulating),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 
                 if (isSimulating)
                   Container(
@@ -413,17 +490,29 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     return Center(
       child: Column(
         children: [
-          const SizedBox(height: 60),
-          Icon(Icons.cloud_off_rounded, color: _white.withValues(alpha: 0.15), size: 60),
+          const SizedBox(height: 50),
+          Icon(Icons.cloud_off_rounded, color: _white.withValues(alpha: 0.2), size: 54),
           const SizedBox(height: 16),
           Text(
-            'Attendance dropped into the void 🕳️', 
-            style: TextStyle(color: _white.withValues(alpha: 0.8), fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+            'No attendance records found', 
+            style: TextStyle(color: _white.withValues(alpha: 0.9), fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.5),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'Pull down to refresh, or check back later.',
-            style: TextStyle(color: _white.withValues(alpha: 0.4), fontSize: 14),
+            'Sync with Student Portal to get real-time attendance.',
+            style: TextStyle(color: _white.withValues(alpha: 0.45), fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: _handlePortalSync,
+            icon: const Icon(Icons.sync_rounded, size: 18, color: Colors.black),
+            label: const Text('SYNC ATTENDANCE NOW', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 13)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00FF9D),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              elevation: 4,
+            ),
           ),
         ],
       ),

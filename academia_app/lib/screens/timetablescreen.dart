@@ -60,10 +60,10 @@ class _TimetableScreenState extends State<TimetableScreen> {
         final tt = parsedData['timetable'];
 
         Map<String, dynamic>? studentInfo;
-        if (att != null && att is Map && att['student_info'] != null) {
-          studentInfo = att['student_info'];
-        } else if (tt != null && tt is Map && tt['student_info'] != null) {
-          studentInfo = tt['student_info'];
+        if (att != null && att is Map && att['student_info'] != null && att['student_info'] is Map && (att['student_info']['name']?.toString().trim().isNotEmpty ?? false)) {
+          studentInfo = Map<String, dynamic>.from(att['student_info']);
+        } else if (tt != null && tt is Map && tt['student_info'] != null && tt['student_info'] is Map && (tt['student_info']['name']?.toString().trim().isNotEmpty ?? false)) {
+          studentInfo = Map<String, dynamic>.from(tt['student_info']);
         }
 
         if (studentInfo != null) {
