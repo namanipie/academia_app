@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/theme_controller.dart';
 import '../screens/theme_settings_screen.dart';
 import '../utils/logout_user.dart';
+import '../widgets/student_portal_auth_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -210,6 +211,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 32),
 
 
+
+                      _buildSectionHeader('STUDENT PORTAL', theme),
+                      _buildActionTile(
+                        theme: theme,
+                        icon: Icons.school_rounded,
+                        title: 'Student Portal Account',
+                        subtitle: 'Zero-CAPTCHA sync for Attendance & Marks',
+                        onTap: () async {
+                          HapticFeedback.lightImpact();
+                          final success = await StudentPortalAuthDialog.show(context);
+                          if (success == true) {
+                            _loadUserData();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 32),
 
                       _buildSectionHeader('ABOUT', theme),
                       _buildActionTile(

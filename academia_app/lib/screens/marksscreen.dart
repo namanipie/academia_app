@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
@@ -331,10 +332,20 @@ Future<void> _handlePortalSync() async {
         foregroundColor: _neonGreen,
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.sync_rounded, color: _white),
-            tooltip: 'Sync Student Portal',
-            onPressed: _handlePortalSync,
+          GestureDetector(
+            onLongPress: () async {
+              HapticFeedback.heavyImpact();
+              final success = await StudentPortalAuthDialog.show(context);
+              if (success == true) {
+                await _loadMarksFromPrefs();
+                widget.onDataRefreshed?.call();
+              }
+            },
+            child: IconButton(
+              icon: const Icon(Icons.sync_rounded, color: _white),
+              tooltip: 'Sync Student Portal (Hold to Reconnect)',
+              onPressed: _handlePortalSync,
+            ),
           ),
           const SizedBox(width: 8),
         ],

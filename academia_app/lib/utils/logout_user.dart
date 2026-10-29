@@ -64,6 +64,8 @@ Future<void> logoutAction(BuildContext context) async {
     'student_portal_result',
     'student_portal_connected',
     'student_portal_last_synced',
+    'studentPortalPassword',
+    'studentPortalNetId',
     'nearby_history',
   ];
 

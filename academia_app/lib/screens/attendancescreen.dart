@@ -256,10 +256,20 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         elevation: 0,
         centerTitle: false,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.sync_rounded, color: _white),
-            tooltip: 'Sync Student Portal',
-            onPressed: _handlePortalSync,
+          GestureDetector(
+            onLongPress: () async {
+              HapticFeedback.heavyImpact();
+              final success = await StudentPortalAuthDialog.show(context);
+              if (success == true) {
+                await _loadAttendanceFromPrefs();
+                widget.onDataRefreshed?.call();
+              }
+            },
+            child: IconButton(
+              icon: const Icon(Icons.sync_rounded, color: _white),
+              tooltip: 'Sync Student Portal (Hold to Reconnect)',
+              onPressed: _handlePortalSync,
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: _white),
