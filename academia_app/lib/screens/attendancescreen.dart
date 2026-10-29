@@ -13,7 +13,8 @@ import '../services/student_portal_service.dart';
 import '../services/timetable_service.dart';
 
 class AttendanceScreen extends StatefulWidget {
-  const AttendanceScreen({super.key});
+  final VoidCallback? onDataRefreshed;
+  const AttendanceScreen({super.key, this.onDataRefreshed});
 
   @override
   State<AttendanceScreen> createState() => _AttendanceScreenState();
@@ -68,8 +69,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   Future<void> _handlePortalSync() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('userEmail') ?? prefs.getString('netid') ?? '';
-      final password = prefs.getString('userPassword') ?? '';
+      final portalPass = prefs.getString('studentPortalPassword');
+      final portalNetId = prefs.getString('studentPortalNetId');
+      final email = (portalNetId != null && portalNetId.isNotEmpty)
+          ? portalNetId
+          : (prefs.getString('userEmail') ?? prefs.getString('netid') ?? '');
+      final password = (portalPass != null && portalPass.isNotEmpty)
+          ? portalPass
+          : (prefs.getString('userPassword') ?? '');
 
       if (email.isNotEmpty && password.isNotEmpty && password != 'guest') {
         if (mounted) {
@@ -102,6 +109,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
 
         if (res.success) {
           await _loadAttendanceFromPrefs();
+          widget.onDataRefreshed?.call();
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -117,7 +125,8 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
     if (!mounted) return;
     final success = await StudentPortalAuthDialog.show(context);
     if (success == true) {
-      _loadAttendanceFromPrefs();
+      await _loadAttendanceFromPrefs();
+      widget.onDataRefreshed?.call();
     }
   }
 

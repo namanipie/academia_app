@@ -8,7 +8,8 @@ import '../widgets/student_portal_auth_dialog.dart';
 import '../services/student_portal_service.dart';
 
 class MarksScreen extends StatefulWidget {
-  const MarksScreen({super.key});
+  final VoidCallback? onDataRefreshed;
+  const MarksScreen({super.key, this.onDataRefreshed});
 
   @override
   State<MarksScreen> createState() => _MarksScreenState();
@@ -38,8 +39,14 @@ class _MarksScreenState extends State<MarksScreen> {
 Future<void> _handlePortalSync() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final email = prefs.getString('userEmail') ?? prefs.getString('netid') ?? '';
-      final password = prefs.getString('userPassword') ?? '';
+      final portalPass = prefs.getString('studentPortalPassword');
+      final portalNetId = prefs.getString('studentPortalNetId');
+      final email = (portalNetId != null && portalNetId.isNotEmpty)
+          ? portalNetId
+          : (prefs.getString('userEmail') ?? prefs.getString('netid') ?? '');
+      final password = (portalPass != null && portalPass.isNotEmpty)
+          ? portalPass
+          : (prefs.getString('userPassword') ?? '');
 
       if (email.isNotEmpty && password.isNotEmpty && password != 'guest') {
         if (mounted) {
@@ -72,6 +79,7 @@ Future<void> _handlePortalSync() async {
 
         if (res.success) {
           await _loadMarksFromPrefs();
+          widget.onDataRefreshed?.call();
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -87,7 +95,8 @@ Future<void> _handlePortalSync() async {
     if (!mounted) return;
     final success = await StudentPortalAuthDialog.show(context);
     if (success == true) {
-      _loadMarksFromPrefs();
+      await _loadMarksFromPrefs();
+      widget.onDataRefreshed?.call();
     }
   }
 
@@ -237,6 +246,8 @@ Future<void> _handlePortalSync() async {
             courseTitle = courseFromTimetable['course_title'].toString();
           } else if (attendanceTitleMap.containsKey(baseCode)) {
             courseTitle = attendanceTitleMap[baseCode]!;
+          } else if (value['course_name'] != null && value['course_name'].toString().isNotEmpty) {
+            courseTitle = value['course_name'].toString();
           }
 
           parsed.add({

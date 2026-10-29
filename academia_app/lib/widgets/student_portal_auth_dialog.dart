@@ -6,7 +6,7 @@ import '../services/student_portal_service.dart';
 class StudentPortalAuthDialog extends StatefulWidget {
   const StudentPortalAuthDialog({super.key});
 
-  /// Static helper to display the native dialog
+  /// Static helper to display the native zero-captcha dialog
   static Future<bool?> show(BuildContext context) {
     return showDialog<bool>(
       context: context,
@@ -23,32 +23,27 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
   static const Color _bgCard = Color(0xFF141419);
   static const Color _inputFill = Color(0xFF1F1F27);
   static const Color _primaryOrange = Color(0xFFFF6B00);
-  static const Color _accentGreen = Color(0xFF76FF03);
+  static const Color _neonGreen = Color(0xFF00FF9D);
   static const Color _mutedText = Color(0xFF9E9E9E);
 
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _captchaController = TextEditingController();
 
   bool _obscurePassword = true;
-  bool _isLoadingCaptcha = true;
   bool _isSubmitting = false;
   String? _errorMessage;
-  CaptchaSession? _captchaSession;
 
   @override
   void initState() {
     super.initState();
     _loadStoredCredentials();
-    _fetchFreshCaptcha();
   }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
-    _captchaController.dispose();
     super.dispose();
   }
 
@@ -62,7 +57,7 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
         final raw = prefs.getString('userData');
         if (raw != null && raw.isNotEmpty) {
           final data = json.decode(raw) as Map<String, dynamic>;
-          final netid = data['netid'];
+          final netid = data['netid'] ?? data['student_info']?['reg_no'] ?? data['attendance']?['student_info']?['reg_no'];
           if (netid != null && netid.toString().trim().isNotEmpty) {
             _usernameController.text = netid.toString().trim();
           }
@@ -75,41 +70,11 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
         }
       }
 
-      // Decouple from userPassword: Never auto-insert Academia password into Student Portal!
       final savedPortalPass = prefs.getString('studentPortalPassword');
       if (savedPortalPass != null && savedPortalPass.isNotEmpty) {
         _passwordController.text = savedPortalPass;
       }
     } catch (_) {}
-  }
-
-  Future<void> _fetchFreshCaptcha({bool clearError = true}) async {
-    if (mounted) {
-      setState(() {
-        _isLoadingCaptcha = true;
-        if (clearError) {
-          _errorMessage = null;
-        }
-        _captchaController.clear();
-      });
-    }
-
-    try {
-      final session = await StudentPortalService.fetchCaptcha();
-      if (mounted) {
-        setState(() {
-          _captchaSession = session;
-          _isLoadingCaptcha = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoadingCaptcha = false;
-          _errorMessage = 'Failed to load CAPTCHA: ${e.toString().replaceAll("Exception:", "").trim()}';
-        });
-      }
-    }
   }
 
   Future<void> _handleSubmit() async {
@@ -125,7 +90,7 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
       final cleanUsername = _usernameController.text.trim().replaceAll(RegExp(r'@srmist\.edu\.in$', caseSensitive: false), '').trim();
       final password = _passwordController.text.trim();
 
-      // 1. Try zero-CAPTCHA gateway first (fastest, no user friction)
+      // Zero-CAPTCHA background sync via first-party OCR scraper
       final gwResult = await StudentPortalService.syncViaGateway(
         username: cleanUsername,
         password: password,
@@ -142,46 +107,16 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
         return;
       }
 
-      // 2. If gateway failed and user entered CAPTCHA, attempt direct portal login
-      if (_captchaSession != null && _captchaController.text.trim().isNotEmpty) {
-        final result = await StudentPortalService.loginAndSync(
-          username: cleanUsername,
-          password: password,
-          captcha: _captchaController.text.trim(),
-          session: _captchaSession!,
-        );
-
-        if (!mounted) return;
-
-        if (result.success) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('studentPortalPassword', password);
-          await prefs.setString('studentPortalNetId', cleanUsername);
-          await prefs.setBool('student_portal_connected', true);
-          if (mounted) Navigator.pop(context, true);
-          return;
-        } else {
-          setState(() {
-            _isSubmitting = false;
-            _errorMessage = result.errorMessage ?? 'Authentication failed.';
-          });
-          _fetchFreshCaptcha(clearError: false);
-          return;
-        }
-      }
-
       setState(() {
         _isSubmitting = false;
         _errorMessage = gwResult.errorMessage ?? 'Authentication failed. Please verify credentials.';
       });
-      _fetchFreshCaptcha(clearError: false);
     } catch (e) {
       if (mounted) {
         setState(() {
           _isSubmitting = false;
-          _errorMessage = 'Error: $e';
+          _errorMessage = 'Connection error: ${e.toString().replaceAll("Exception:", "").trim()}';
         });
-        _fetchFreshCaptcha(clearError: false);
       }
     }
   }
@@ -190,16 +125,16 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           color: _bgCard,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.6),
+              color: Colors.black.withValues(alpha: 0.7),
               blurRadius: 30,
               offset: const Offset(0, 10),
             ),
@@ -251,7 +186,31 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+
+                // Zero-Captcha Pill
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: _neonGreen.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: _neonGreen.withValues(alpha: 0.25)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.bolt_rounded, color: _neonGreen, size: 16),
+                      SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          "Automated Zero-CAPTCHA background solving",
+                          style: TextStyle(color: _neonGreen, fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
 
                 // Error alert box
                 if (_errorMessage != null) ...[
@@ -321,96 +280,6 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
                   ),
                   validator: (v) => (v == null || v.isEmpty) ? 'Please enter your password' : null,
                 ),
-                const SizedBox(height: 16),
-
-                // CAPTCHA Section
-                Row(
-                  children: [
-                    const Text("Enter CAPTCHA", style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: _primaryOrange.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: _primaryOrange.withValues(alpha: 0.4)),
-                      ),
-                      child: const Text("Case-sensitive (a ≠ A)", style: TextStyle(color: _primaryOrange, fontSize: 10, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // High-contrast CAPTCHA Image Container
-                    Container(
-                      height: 48,
-                      width: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.white38, width: 1.5),
-                      ),
-                      alignment: Alignment.center,
-                      child: _isLoadingCaptcha
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.black54)),
-                            )
-                          : (_captchaSession != null
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.memory(
-                                    _captchaSession!.imageBytes,
-                                    height: 44,
-                                    width: 136,
-                                    fit: BoxFit.contain,
-                                  ),
-                                )
-                              : const Text('Error', style: TextStyle(color: Colors.black54, fontSize: 12))),
-                    ),
-                    const SizedBox(width: 10),
-
-                    // Refresh Button
-                    IconButton(
-                      icon: const Icon(Icons.refresh_rounded, color: _accentGreen, size: 24),
-                      tooltip: 'Refresh CAPTCHA',
-                      onPressed: (_isLoadingCaptcha || _isSubmitting) ? null : () => _fetchFreshCaptcha(clearError: true),
-                    ),
-
-                    const Expanded(
-                      child: Text(
-                        "Tap icon if unclear",
-                        style: TextStyle(color: _mutedText, fontSize: 11),
-                        maxLines: 2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                // CAPTCHA Input Field (Case-sensitive, no auto-capitalization)
-                TextFormField(
-                  controller: _captchaController,
-                  enabled: !_isSubmitting && !_isLoadingCaptcha,
-                  textCapitalization: TextCapitalization.none,
-                  autocorrect: false,
-                  enableSuggestions: false,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, letterSpacing: 1.5, fontWeight: FontWeight.w600),
-                  decoration: InputDecoration(
-                    hintText: 'Enter CAPTCHA exactly as shown',
-                    hintStyle: const TextStyle(color: Colors.white24, fontSize: 13, letterSpacing: 0),
-                    filled: true,
-                    fillColor: _inputFill,
-                    prefixIcon: const Icon(Icons.security_rounded, color: Colors.white38, size: 18),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  ),
-                  validator: (v) => null, // Optional for zero-CAPTCHA gateway sync
-                ),
                 const SizedBox(height: 24),
 
                 // Actions
@@ -441,12 +310,19 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         child: _isSubmitting
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                            ? const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SizedBox(
+                                    height: 16,
+                                    width: 16,
+                                    child: CircularProgressIndicator(strokeWidth: 2, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                                  ),
+                                  SizedBox(width: 10),
+                                  Text("CONNECTING...", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                                ],
                               )
-                            : const Text("LOGIN & SYNC", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.8)),
+                            : const Text("CONNECT & SYNC", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 0.8)),
                       ),
                     ),
                   ],

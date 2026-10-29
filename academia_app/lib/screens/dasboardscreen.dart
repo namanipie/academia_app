@@ -34,19 +34,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<Widget> _buildScreens() {
     return [
       HomeScreen(
-        onDataRefreshed: () {
-          setState(() {
-            _attendanceKey = UniqueKey();
-            _marksKey = UniqueKey();
-            _timetableKey = UniqueKey();
-            _screens = _buildScreens();
-          });
-        },
+        onDataRefreshed: _refreshAllScreens,
       ),
-      AttendanceScreen(key: _attendanceKey),
-      MarksScreen(key: _marksKey),
+      AttendanceScreen(
+        key: _attendanceKey,
+        onDataRefreshed: _refreshAllScreens,
+      ),
+      MarksScreen(
+        key: _marksKey,
+        onDataRefreshed: _refreshAllScreens,
+      ),
       TimetableScreen(key: _timetableKey),
     ];
+  }
+
+  void _refreshAllScreens() {
+    if (mounted) {
+      setState(() {
+        _attendanceKey = UniqueKey();
+        _marksKey = UniqueKey();
+        _timetableKey = UniqueKey();
+        _screens = _buildScreens();
+      });
+    }
   }
 
   bool _handleScrollNotification(ScrollNotification notification) {
@@ -147,7 +157,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
-        setState(() => _currentIndex = index);
+        if (_currentIndex != index) {
+          setState(() {
+            _currentIndex = index;
+            if (index == 1) _attendanceKey = UniqueKey();
+            if (index == 2) _marksKey = UniqueKey();
+            _screens = _buildScreens();
+          });
+        }
       },
       behavior: HitTestBehavior.opaque,
       child: Padding(
