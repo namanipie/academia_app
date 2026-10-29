@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
 import 'student_portal_parser.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/day_order_backup.dart';
 import '../config/backend_config.dart';
 
 class CaptchaSession {
@@ -456,14 +458,36 @@ class StudentPortalService {
       }
 
       final rawStudentInfo = (data['student_info'] as Map<String, dynamic>?) ?? {};
+            // Preserve existing student info from local storage (if available)
+      final prefs = await SharedPreferences.getInstance();
+      Map<String, dynamic> existingStudentInfo = {};
+      int? existingDayOrder;
+      final rawUserData = prefs.getString('userData');
+      if (rawUserData != null && rawUserData.isNotEmpty) {
+        try {
+          final decoded = json.decode(rawUserData) as Map<String, dynamic>;
+          if (decoded['student_info'] is Map<String, dynamic>) {
+            existingStudentInfo = decoded['student_info'] as Map<String, dynamic>;
+          }
+          existingDayOrder = decoded['attendance']?['day_order'] as int?;
+        } catch (_) {}
+      }
+
+      int? resolvedDayOrder = existingDayOrder;
+      if (resolvedDayOrder == null) {
+        try {
+          resolvedDayOrder = await DayOrderManager.getDayOrderForDate(DateTime.now());
+        } catch (_) {}
+      }
+
       final studentInfo = {
-        'name': rawStudentInfo['name'] ?? cleanUsername,
-        'reg_no': rawStudentInfo['reg_no'] ?? cleanUsername,
-        'department': 'Computer Science and Engineering',
-        'program': 'B.Tech',
-        'semester': 'III SEMESTER',
-        'classroom': '',
-        'photo': rawStudentInfo['photo_url'] ?? '',
+        'name': rawStudentInfo['name'] ?? existingStudentInfo['name'] ?? cleanUsername,
+        'reg_no': rawStudentInfo['reg_no'] ?? existingStudentInfo['reg_no'] ?? cleanUsername,
+        'department': existingStudentInfo['department'] ?? '',
+        'program': existingStudentInfo['program'] ?? '',
+        'semester': existingStudentInfo['semester'] ?? '',
+        'classroom': existingStudentInfo['classroom'] ?? '',
+        'photo': rawStudentInfo['photo_url'] ?? existingStudentInfo['photo'] ?? '',
       };
 
       final attendanceData = (data['attendance'] as Map<String, dynamic>?) ?? {};
@@ -493,7 +517,7 @@ class StudentPortalService {
         'attendance': {
           'attendance': attendanceData,
           'student_info': studentInfo,
-          'day_order': 4,
+          if (resolvedDayOrder != null) 'day_order': resolvedDayOrder,
           'attendance_unavailable': false,
           'marks': marksData,
         },

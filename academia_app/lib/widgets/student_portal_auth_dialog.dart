@@ -245,7 +245,7 @@ class _StudentPortalAuthDialogState extends State<StudentPortalAuthDialog> {
                   enabled: !_isSubmitting,
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
-                    hintText: 'e.g. nk1629 (without @srmist.edu.in)',
+                    hintText: 'e.g. ab1234 or your NetID',
                     hintStyle: const TextStyle(color: Colors.white24, fontSize: 13),
                     filled: true,
                     fillColor: _inputFill,
